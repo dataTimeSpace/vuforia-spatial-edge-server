@@ -1,6 +1,6 @@
 if [ ! -d "vuforia-spatial-edge-server" ]; then
   echo "Cloning"
-  git clone https://github.com/ptcrealitylab/vuforia-spatial-edge-server
+  git clone https://github.com/dataTimeSpace/vuforia-spatial-edge-server
   cd vuforia-spatial-edge-server
   git submodule update --init --recursive
   cd ..

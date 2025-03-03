@@ -8,7 +8,7 @@
     "archiver": "^7.0.1",
     "cheerio": "^1.0.0-rc.12",
     "cors": "^2.8.5",
-    "decompress-zip": "github:hobinjk-ptc/decompress-zip",
+    "decompress-zip": "github:dataTimeSpace/decompress-zip",
     "directory-tree": "^3.5.2",
     "express": "^4.21.1",
     "express-handlebars": "^5.3.5",
@@ -23,7 +23,7 @@
     "node-persist": "^2.1.0",
     "request": "^2.*",
     "simple-git": "^3.25.0",
-    "toolsocket": "github:ptcrealitylab/toolsocket",
+    "toolsocket": "github:dataTimeSpace/toolsocket",
     "winston": "^3.14.1",
     "ws": "^8.18.0",
     "xml2js": "^0.6.2",
@@ -31,7 +31,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ptcrealitylab/vuforia-spatial-edge-server"
+    "url": "https://github.com/dataTimeSpace/vuforia-spatial-edge-server"
   },
   "devDependencies": {
     "eslint": "^8.57.0",

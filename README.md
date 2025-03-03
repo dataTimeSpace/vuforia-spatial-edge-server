@@ -6,8 +6,8 @@ instance of this server. This README outlines how to install the server on
 larger scale devices with command line access like laptops or desktops. Running
 on embedded devices may require more preparation. App-specific documentation
 can be found in the [Vuforia Toolbox
-iOS](https://github.com/ptcrealitylab/vuforia-toolbox-ios) or [Vuforia Toolbox
-Android](https://github.com/ptcrealitylab/vuforia-toolbox-android)
+iOS](https://github.com/dataTimeSpace/vuforia-toolbox-ios) or [Vuforia Toolbox
+Android](https://github.com/dataTimeSpace/vuforia-toolbox-android)
 repositories.
 
 ## Read First
@@ -24,7 +24,7 @@ software on Node 12, 14, 16, and 18 with 16 being our recommended platform.
 Second, clone this repository into your desired directory:
 
 ```bash
-git clone https://github.com/ptcrealitylab/vuforia-spatial-edge-server.git
+git clone https://github.com/dataTimeSpace/vuforia-spatial-edge-server.git
 ```
 
 Next, enter the vuforia-toolbox-server directory and install all dependencies.
@@ -74,16 +74,16 @@ commit your changes, then GitHub will prompt you to make a pull request.
 Note that we do run some automated testing to ensure that our code remains
 consistently styled and functional. If you want to see the results of this
 testing locally, you can follow
-[this Github Actions workflow](https://github.com/ptcrealitylab/vuforia-spatial-edge-server/blob/master/.github/workflows/nodejs.yml).
+[this Github Actions workflow](https://github.com/dataTimeSpace/vuforia-spatial-edge-server/blob/master/.github/workflows/nodejs.yml).
 
 ```bash
-git clone --recurse-submodules https://github.com/ptcrealitylab/vuforia-spatial-edge-server.git
+git clone --recurse-submodules https://github.com/dataTimeSpace/vuforia-spatial-edge-server.git
 cd vuforia-spatial-edge-server
 ./scripts/ci.sh
 ```
 
 The most important parts of the workflow are running the commands of
-[scripts/ci.sh](https://github.com/ptcrealitylab/vuforia-spatial-edge-server/blob/master/scripts/ci.sh)
+[scripts/ci.sh](https://github.com/dataTimeSpace/vuforia-spatial-edge-server/blob/master/scripts/ci.sh)
 to setup (note that some repos may not be available, causing test failures
 locally). After this, you can run tests using the following command in your
 vuforia-toolbox-server folder:
@@ -153,9 +153,9 @@ priority and the user must choose among them).
 ## Additional Server Addons
 There are several useful server addons that we do not include in the base
 server. For example, installing the include the [edge
-agent](https://github.com/ptcrealitylab/vuforia-spatial-edge-agent-addon) and
+agent](https://github.com/dataTimeSpace/vuforia-spatial-edge-agent-addon) and
 [remote
-operator](https://github.com/ptcrealitylab/vuforia-spatial-remote-operator-addon/)
+operator](https://github.com/dataTimeSpace/vuforia-spatial-remote-operator-addon/)
 addons will enable your server to act as a standalone remote operator host
 behind our cloud proxy. Note that the edge agent addon is currently private but
 will be open-sourced soon.
@@ -164,8 +164,8 @@ For each addon you want to install follow these steps, substituting the github
 url as necessary:
 ```bash
 cd addons
-git clone https://github.com/ptcrealitylab/vuforia-spatial-remote-operator-addon
-git clone git@github.com:ptcrealitylab/vuforia-spatial-edge-agent-addon
+git clone https://github.com/dataTimeSpace/vuforia-spatial-remote-operator-addon
+git clone git@github.com:dataTimeSpace/vuforia-spatial-edge-agent-addon
 cd vuforia-spatial-remote-operator-addon
 npm install
 cd .. # return to the addons directory
