@@ -145,8 +145,6 @@ const netmask = '255.255.0.0'; // define the network scope from which this serve
 
 const fs = require('fs');       // Filesystem library
 const fsProm = require('./persistence/fsProm.js');
-const SyncInterval = require('./persistence/syncInterval.js');
-const syncInterval = new SyncInterval();
 const path = require('path');
 const DecompressZip = require('decompress-zip');
 const dirTree = require('directory-tree');
@@ -189,6 +187,8 @@ try {
 
 var dgram = require('dgram'); // UDP Broadcasting library
 let udpServer;
+
+let persistenceRouter = null;
 
 var services = {};
 if (!isLightweightMobile) {
@@ -314,10 +314,6 @@ for (const frameLibPath of frameLibPaths) {
     if (fs.existsSync(frameLibPath)) {
         addonFrames.addFramesSource(frameLibPath);
     }
-}
-
-if (process.env.NODE_ENV !== 'test' && persistToCloud) {
-    syncInterval.start();
 }
 
 // constrution for the werbserver using express combined with socket.io
@@ -1084,7 +1080,9 @@ function closeServer(server) {
 }
 
 async function exit() {
-    syncInterval.stop();
+    if (persistenceRouter) {
+        persistenceRouter.stop();
+    }
     hardwareAPI.shutdown();
     await closeServer(http);
     await closeServer(io.server);
@@ -1849,6 +1847,7 @@ function objectWebServer() {
     const logicRouter = require('./routers/logic');
     const spatialRouter = require('./routers/spatial');
     const historyRouter = require('./routers/history');
+    persistenceRouter = require('./routers/persistence.js');
     objectRouter.setup(globalVariables);
     logicRouter.setup(globalVariables);
     spatialRouter.setup(globalVariables);
@@ -1856,6 +1855,7 @@ function objectWebServer() {
     webServer.use('/logic', logicRouter.router);
     webServer.use('/spatial', spatialRouter.router);
     webServer.use('/history', historyRouter.router);
+    webServer.use('/persistence', persistenceRouter.router);
 
     /**
      * Checks whether the server is online. Can be used by clients to also calculate the round-tip-time to the server.

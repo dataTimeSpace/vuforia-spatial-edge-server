@@ -3,9 +3,9 @@ const https = require('https');
 const proxyRequestHandler = (req, res) => {
     const input = req.params[0];
     if (!input.includes('://')) {
-        const proxyURL = `https://demo.platform.datatime.space/${req.params[0]}`;
+        const proxyURL = `https://stable.platform.datatime.space/${req.params[0]}`;
         const headers = req.headers;
-        headers.Host = 'demo.platform.datatime.space';
+        headers.Host = 'stable.platform.datatime.space';
         https.get(proxyURL, {headers}, proxyRes => {
             res.status(proxyRes.statusCode);
             for (let header in proxyRes.headers) {
