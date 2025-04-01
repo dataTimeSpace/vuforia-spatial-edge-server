@@ -72,7 +72,7 @@ class CloudProxyWrapper {
         if (!edgeAgent || !edgeAgent.networkUUID || !edgeAgent.networkSecret) {
             throw new Error('bad edge-agent settings: ' + JSON.stringify(edgeAgent));
         }
-        const serverUrl = edgeAgent.serverUrl || 'demo.platform.datatime.space';
+        const serverUrl = edgeAgent.serverUrl || 'stable.platform.datatime.space';
         const networkUUID = edgeAgent.networkUUID;
         const networkSecret = edgeAgent.networkSecret;
         return `https://${serverUrl}/n/${networkUUID}/s/${networkSecret}/files/`;
