@@ -143,6 +143,7 @@ const netmask = '255.255.0.0'; // define the network scope from which this serve
 // for a local network 255.255.0.0 allows a 16 bit block of local network addresses to reach the object.
 // basically all your local devices can see the object, however the internet is unable to reach the object.
 
+const fetch = require('node-fetch');
 const fs = require('fs');       // Filesystem library
 const fsProm = require('./persistence/fsProm.js');
 const path = require('path');
@@ -1452,18 +1453,16 @@ async function getKnownSceneGraph(ip, port) {
 
     // 2. if not, make an HTTP GET request to the other server's /spatial/sceneGraph endpoint to get it
     const url = (globalVariables.useHTTPS ? 'https' : 'http') + '://' + ip + ':' + (port || 8080) + '/spatial/sceneGraph';
-    let response = null;
+    let thatSceneGraph;
     try {
-        response = await utilities.httpGet(url);
+        const response = await fetch(url);
+        thatSceneGraph = await response.json();
     } catch (e) {
         console.error('error awaiting /spatial/sceneGraph', e);
         return;
     }
 
-    // 3. parse the results and add it as a known scene graph
-    var thatSceneGraph = typeof response === 'string' ? JSON.parse(response) : response;
-
-    // 4. create a method to compile all known scene graphs with this server's graph to be visualized
+    // 3. add it as a known scene graph
     worldGraph.addKnownGraph(ip, thatSceneGraph);
 }
 

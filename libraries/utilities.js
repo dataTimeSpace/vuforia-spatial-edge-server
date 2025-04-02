@@ -61,7 +61,6 @@ const fsProm = require('../persistence/fsProm.js');
 const ip = require('ip');       // get the device IP address library
 const dgram = require('dgram'); // UDP Broadcasting library
 const path = require('path');
-const request = require('request');
 const fetch = require('node-fetch');
 const DecompressZip = require('decompress-zip');
 const ObjectModel = require('../models/ObjectModel.js');
@@ -1135,22 +1134,6 @@ function deepCopy(item) {
     throw new Error('Unable to deep copy this object.');
 }
 exports.deepCopy = deepCopy;
-
-exports.httpGet = function (url) {
-    return new Promise((resolve, reject) => {
-        request(url, (error, response, body) => {
-            if (error) {
-                reject(error);
-                return;
-            }
-            if (response.statusCode !== 200) {
-                reject('Invalid status code <' + response.statusCode + '>');
-                return;
-            }
-            resolve(body);
-        });
-    });
-};
 
 /**
  * Wrapper for  access that resolves to false when file at filePath does not
