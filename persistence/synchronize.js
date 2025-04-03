@@ -13,6 +13,15 @@ const PULL_FROM_REMOTE = false;
 // our local file with
 const allowRemoteOverwriteLocal = false;
 
+const worldRe = /(_WORLD_[^/]+)/
+function getWorld(diffPath) {
+    let matches = worldRe.exec(diffPath);
+    if (!matches) {
+        return null;
+    }
+    return matches[1];
+}
+
 class Synchronizer {
     constructor() {
         this.diffs = [];
@@ -21,6 +30,7 @@ class Synchronizer {
         this.matching = [];
         this.enableSyncing = false;
         this.syncing = false;
+        this.onSyncDoneHooks = [];
     }
 
     async updateSyncLists() {
@@ -69,18 +79,20 @@ class Synchronizer {
         }
         let unmatching = [].concat(this.diffs, this.newRemote, this.newLocal);
         for (let diff of unmatching) {
-            let world = getWorld(diff) || 'other';
-            if (!worlds[world]) {
-                worlds[world] = getDefaultStatus();
+            let worldId = getWorld(diff) || 'other';
+            if (!worlds[worldId]) {
+                worlds[worldId] = getDefaultStatus();
             }
+            const world = worlds[worldId];
             world.total += 1;
         }
 
         for (let same of this.matching) {
-            let world = getWorld(same) || 'other';
-            if (!worlds[world]) {
-                worlds[world] = getDefaultStatus();
+            let worldId = getWorld(same) || 'other';
+            if (!worlds[worldId]) {
+                worlds[worldId] = getDefaultStatus();
             }
+            const world = worlds[worldId];
             world.matching += 1;
             world.total += 1;
         }
@@ -92,7 +104,13 @@ class Synchronizer {
         };
     }
 
-    async startSync() {
+
+    /**
+     * Start syncing process
+     * @param {string?} onSyncDoneHook webhook url to be hit when syncing is done
+     */
+    async startSync(onSyncDoneHook) {
+        this.onSyncDoneHooks.push(onSyncDoneHook);
         if (this.enableSyncing) {
             return;
         }
@@ -107,6 +125,16 @@ class Synchronizer {
             await this.updateSyncLists();
         }
 
+        for (let onSyncDoneHook of this.onSyncDoneHooks) {
+            fetch(onSyncDoneHook, {
+                method: 'POST',
+                headers: {
+                    'Content-type': 'application/json',
+                },
+                body: JSON.stringify(this.getStatus()),
+            });
+        }
+        this.onSyncDoneHooks = [];
         this.enableSyncing = false;
     }
 
