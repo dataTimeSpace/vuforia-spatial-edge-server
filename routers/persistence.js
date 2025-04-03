@@ -18,6 +18,12 @@ router.get('/status', (_req, res) => {
     res.json(synchronizer.getStatus());
 });
 
+
+function stop() {
+    synchronizer.stopSync();
+}
+
 module.exports = {
     router,
+    stop,
 };
