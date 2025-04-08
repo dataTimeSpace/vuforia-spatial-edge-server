@@ -6,12 +6,6 @@ const {objectsPath} = require('../config.js');
 const makeChecksumList = require('./makeChecksumList.js');
 
 const DEBUG = false;
-const PULL_FROM_REMOTE = false;
-
-// Experimental feature to allow the remote (cloud proxy) to determine a merge
-// between our state and theirs and send back this merge for us to overwrite
-// our local file with
-const allowRemoteOverwriteLocal = false;
 
 const worldRe = /(_WORLD_[^/]+)/
 function getWorld(diffPath) {
@@ -25,7 +19,6 @@ function getWorld(diffPath) {
 class Synchronizer {
     constructor() {
         this.diffs = [];
-        this.newRemote = [];
         this.newLocal = [];
         this.matching = [];
         this.enableSyncing = false;
@@ -38,7 +31,6 @@ class Synchronizer {
         const cslLocal = await makeChecksumList(objectsPath, '');
 
         let diffs = [];
-        let newRemote = [];
         let newLocal = [];
         let matching = [];
 
@@ -50,10 +42,6 @@ class Synchronizer {
                 } else {
                     matching.push(pathRemote);
                 }
-            } else {
-                if (PULL_FROM_REMOTE) {
-                    newRemote.push(pathRemote);
-                }
             }
         }
 
@@ -64,7 +52,6 @@ class Synchronizer {
         }
 
         this.diffs = diffs;
-        this.newRemote = newRemote;
         this.newLocal = newLocal;
         this.matching = matching;
     }
@@ -77,7 +64,7 @@ class Synchronizer {
                 total: 0,
             };
         }
-        let unmatching = [].concat(this.diffs, this.newRemote, this.newLocal);
+        let unmatching = [].concat(this.diffs, this.newLocal);
         for (let diff of unmatching) {
             let worldId = getWorld(diff) || 'other';
             if (!worlds[worldId]) {
@@ -119,8 +106,7 @@ class Synchronizer {
         await this.updateSyncLists();
         while (this.enableSyncing && (
                 this.diffs.length > 0 ||
-                this.newLocal.length > 0 ||
-                this.newRemote.length > 0)) {
+                this.newLocal.length > 0)) {
             await this.performSync();
             await this.updateSyncLists();
         }
@@ -138,6 +124,24 @@ class Synchronizer {
         this.enableSyncing = false;
     }
 
+    async performSyncOnList(pathsList) {
+        if (!this.syncing) {
+            return;
+        }
+
+        while (pathsList.length > 0) {
+            const relPath = pathsList.pop();
+            if (!this.enableSyncing) {
+                this.syncing = false;
+                return;
+            }
+            const localAbsPath = path.join(objectsPath, relPath);
+            const contents = await local.readFile(localAbsPath);
+            await remote.writeFile(relPath, contents);
+            this.matching.push(relPath);
+        }
+    }
+
     async performSync() {
         if (this.syncing) {
             return;
@@ -147,60 +151,12 @@ class Synchronizer {
         if (DEBUG) {
             console.log('sync diffs', this.diffs);
         }
-        while (this.diffs.length > 0) {
-            const relPath = this.diffs.pop();
-            if (!this.enableSyncing) {
-                this.syncing = false;
-                return;
-            }
-            const localAbsPath = path.join(objectsPath, relPath);
-            const contents = await local.readFile(localAbsPath);
-            const newContents = await remote.writeFile(relPath, contents);
-            if (newContents && allowRemoteOverwriteLocal) {
-                await local.writeFile(localAbsPath, newContents);
-            }
-            this.matching.push(relPath);
-        }
-
-        if (DEBUG) {
-            console.log('sync newRemote', this.newRemote);
-        }
-        while (this.newRemote.length > 0) {
-            const relPath = this.newRemote.pop();
-
-            if (!this.enableSyncing) {
-                this.syncing = false;
-                return;
-            }
-            const localAbsPath = path.join(objectsPath, relPath);
-            const contents = await remote.readFile(relPath);
-            const localAbsDir = path.dirname(localAbsPath);
-            try {
-                await local.mkdir(localAbsDir, {recursive: true});
-            } catch (_e) {
-                // dir already exists
-            }
-            await local.writeFile(localAbsPath, contents);
-
-            this.matching.push(relPath);
-        }
+        await this.performSyncOnList(this.diffs);
 
         if (DEBUG) {
             console.log('sync newLocal', this.newLocal);
         }
-        while (this.newLocal.length > 0) {
-            const relPath = this.newLocal.pop();
-
-            if (!this.enableSyncing) {
-                this.syncing = false;
-                return;
-            }
-            const localAbsPath = path.join(objectsPath, relPath);
-            const contents = await local.readFile(localAbsPath);
-            await remote.writeFile(relPath, contents);
-
-            this.matching.push(relPath);
-        }
+        await this.performSyncOnList(this.newLocal);
 
         this.syncing = false;
     }
