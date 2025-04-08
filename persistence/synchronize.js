@@ -104,10 +104,22 @@ class Synchronizer {
         this.enableSyncing = true;
 
         await this.updateSyncLists();
+        let failuresAllowed = 5;
         while (this.enableSyncing && (
                 this.diffs.length > 0 ||
                 this.newLocal.length > 0)) {
-            await this.performSync();
+            try {
+                await this.performSync();
+            } catch (e) {
+                console.warn('Unable to perform sync', e);
+                this.syncing = false;
+                if (failuresAllowed-- < 0) {
+                    console.error('Too many sync failures');
+                    this.onSyncDoneHooks = [];
+                    this.enableSyncing = false;
+                    return;
+                }
+            }
             await this.updateSyncLists();
         }
 
