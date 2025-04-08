@@ -4,8 +4,9 @@ const Synchronizer = require('../persistence/synchronize.js').Synchronizer;
 const router = express.Router();
 const synchronizer = new Synchronizer();
 
-router.post('/start', (_req, res) => {
-    synchronizer.startSync();
+router.post('/start', (req, res) => {
+    console.log('start', req.body.callback);
+    synchronizer.startSync(req.body.callback);
     res.json(synchronizer.getStatus());
 });
 
