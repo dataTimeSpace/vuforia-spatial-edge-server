@@ -1,16 +1,18 @@
-FROM node:12
-LABEL maintainer="vheun@ptc.com,jhobin@ptc.com"
-
-# Bundle app source for development
-ADD . /app/vuforia-spatial-edge-server
-WORKDIR /app
-RUN echo "Installing dependencies" \
-  && set -x \
-  && ./vuforia-spatial-edge-server/scripts/install.sh
-
-EXPOSE 8080
-EXPOSE 49368
-EXPOSE 52316
-
-WORKDIR /app/vuforia-spatial-edge-server
-CMD [ "npm", "start" ]
+FROM node:20-alpine
+LABEL maintainer="jhobin@datatime.space"
+RUN mkdir -p /usr/src/
+COPY . /usr/src/vuforia-spatial-edge-server
+WORKDIR /usr/src/vuforia-spatial-edge-server/addons/vuforia-spatial-remote-operator-addon
+RUN npm ci --omit=dev
+WORKDIR /usr/src/vuforia-spatial-edge-server/addons/vuforia-spatial-core-addon
+RUN npm ci --omit=dev
+WORKDIR /usr/src/vuforia-spatial-edge-server/addons/pop-up-onboarding-addon
+RUN npm ci --omit=dev
+WORKDIR /usr/src/vuforia-spatial-edge-server/addons/onshape-addon
+RUN npm ci --omit=dev
+WORKDIR /usr/src/vuforia-spatial-edge-server/addons/vuforia-spatial-edge-agent-addon
+RUN npm ci --omit=dev
+WORKDIR /usr/src/vuforia-spatial-edge-server
+RUN npm ci --omit=dev
+HEALTHCHECK CMD node scripts/healthcheck.js --spatialToolboxPath=spatialToolbox
+CMD npm start --spatialToolboxPath=spatialToolbox
