@@ -256,7 +256,6 @@ class CloudProxyWrapper {
      * Create or update document at `path`
      * @param {string} path
      * @param {any} contents
-     * @return {Buffer} remote's contents at `path` (result of local-remote merge)
      */
     async writeFile(path, contentsAny) {
         const form = new FormData();
@@ -274,8 +273,6 @@ class CloudProxyWrapper {
         if (!res.ok) {
             throw new Error(`fs api error: writeFile(${path}): ${res.statusText}`);
         }
-        const arrayBuffer = await res.arrayBuffer();
-        return Buffer.from(arrayBuffer);
     }
 
     /**
