@@ -3,6 +3,8 @@ const FormData = require('form-data');
 const pathOps = require('path');
 
 const {objectsPath} = require('../config.js');
+const {getLoadedHardwareInterface} = require('../libraries/utilities.js');
+
 
 /**
  * Implements a slice of the fs/promises API required to synchronize local
@@ -66,9 +68,12 @@ class CloudProxyWrapper {
         return localPath;
     }
 
+    getEdgeAgentSettings() {
+        return getLoadedHardwareInterface('edgeAgent');
+    }
+
     apiBase() {
-        const {getLoadedHardwareInterface} = require('../libraries/utilities.js');
-        const edgeAgent = getLoadedHardwareInterface('edgeAgent');
+        const edgeAgent = this.getEdgeAgentSettings();
         if (!edgeAgent || !edgeAgent.networkUUID || !edgeAgent.networkSecret) {
             throw new Error('bad edge-agent settings: ' + JSON.stringify(edgeAgent));
         }
@@ -79,9 +84,14 @@ class CloudProxyWrapper {
     }
 
     apiHeaders(args) {
-        return {
+        const edgeAgent = this.getEdgeAgentSettings();
+        const headers = {
             'X-Files-Args': JSON.stringify(args),
         };
+        if (edgeAgent && edgeAgent.idToken) {
+            headers.Authorization = `Bearer ${edgeAgent.idToken}`;
+        }
+        return headers;
     }
 
     fetchOptionsRead(args) {
