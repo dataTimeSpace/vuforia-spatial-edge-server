@@ -97,43 +97,45 @@ class Synchronizer {
      * @param {string?} onSyncDoneHook webhook url to be hit when syncing is done
      */
     async startSync(onSyncDoneHook) {
-        this.onSyncDoneHooks.push(onSyncDoneHook);
-        if (this.enableSyncing) {
-            return;
-        }
-        this.enableSyncing = true;
+        try {
+            this.onSyncDoneHooks.push(onSyncDoneHook);
+            if (this.enableSyncing) {
+                return;
+            }
+            this.enableSyncing = true;
 
-        await this.updateSyncLists();
-        let failuresAllowed = 5;
-        while (this.enableSyncing && (
+            await this.updateSyncLists();
+            let failuresAllowed = 5;
+            while (this.enableSyncing && (
                 this.diffs.length > 0 ||
                 this.newLocal.length > 0)) {
-            try {
-                await this.performSync();
-            } catch (e) {
-                console.warn('Unable to perform sync', e);
-                this.syncing = false;
-                if (failuresAllowed-- < 0) {
-                    console.error('Too many sync failures');
-                    this.onSyncDoneHooks = [];
-                    this.enableSyncing = false;
-                    return;
+                try {
+                    await this.performSync();
+                } catch (e) {
+                    console.warn('Unable to perform sync', e);
+                    this.syncing = false;
+                    if (failuresAllowed-- < 0) {
+                        console.error('Too many sync failures');
+                        this.onSyncDoneHooks = [];
+                        this.enableSyncing = false;
+                        return;
+                    }
                 }
+                await this.updateSyncLists();
             }
-            await this.updateSyncLists();
-        }
 
-        for (let onSyncDoneHook of this.onSyncDoneHooks) {
-            fetch(onSyncDoneHook, {
-                method: 'POST',
-                headers: {
-                    'Content-type': 'application/json',
-                },
-                body: JSON.stringify(this.getStatus()),
-            });
+            for (let onSyncDoneHook of this.onSyncDoneHooks) {
+                const apiHeaders = await remote.fetchOptionsWrite();
+                await fetch(onSyncDoneHook, {
+                    ...apiHeaders, // includes method: POST, and headers (with Authorization)
+                    body: JSON.stringify(this.getStatus()),
+                });
+            }
+            this.onSyncDoneHooks = [];
+            this.enableSyncing = false;
+        } catch (error) {
+            console.error('Unable to perform sync', error);
         }
-        this.onSyncDoneHooks = [];
-        this.enableSyncing = false;
     }
 
     async performSyncOnList(pathsList) {
