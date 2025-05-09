@@ -66,9 +66,28 @@ class CloudProxyWrapper {
         return localPath;
     }
 
-    apiBase() {
-        const {getLoadedHardwareInterface} = require('../libraries/utilities.js');
-        const edgeAgent = getLoadedHardwareInterface('edgeAgent');
+    /**
+     * Reads the latest edge agent settings from disk.
+     * More reliable than getLoadedHardwareInterface, which may return an empty/outdated copy of the settings.
+     * @returns {Promise<{idToken: *, networkUUID: *, networkSecret: *, serverUrl: *}|null>}
+     */
+    async getEdgeAgentSettings() {
+        try {
+            const { loadHardwareInterfaceAsync } = require('../libraries/utilities.js');
+            const read = await loadHardwareInterfaceAsync('edgeAgent');
+            return {
+                idToken: read('idToken'),
+                networkUUID: read('networkUUID'),
+                networkSecret: read('networkSecret'),
+                serverUrl: read('serverUrl'),
+            };
+        } catch (error) {
+            return null;
+        }
+    }
+
+    async apiBase() {
+        const edgeAgent = await this.getEdgeAgentSettings();
         if (!edgeAgent || !edgeAgent.networkUUID || !edgeAgent.networkSecret) {
             throw new Error('bad edge-agent settings: ' + JSON.stringify(edgeAgent));
         }
@@ -78,28 +97,33 @@ class CloudProxyWrapper {
         return `https://${serverUrl}/n/${networkUUID}/s/${networkSecret}/files/`;
     }
 
-    apiHeaders(args) {
-        return {
+    async apiHeaders(args) {
+        const edgeAgent = await this.getEdgeAgentSettings();
+
+        const headers = {
             'X-Files-Args': JSON.stringify(args),
         };
-    }
-
-    fetchOptionsRead(args) {
-        if (args) {
-            return {
-                headers: this.apiHeaders(args),
-            };
+        if (edgeAgent && edgeAgent.idToken) {
+            headers.Authorization = `Bearer ${edgeAgent.idToken}`;
         }
-        return {};
+        return headers;
     }
 
-    fetchOptionsWrite(args) {
+    async fetchOptionsRead(args) {
+        const apiHeaders = await this.apiHeaders(args);
+        return {
+            headers: apiHeaders,
+        };
+    }
+
+    async fetchOptionsWrite(args) {
+        const apiHeaders = await this.apiHeaders(args);
+
         let headers = {
             'Content-type': 'application/json',
+            ...apiHeaders
         };
-        if (args) {
-            Object.assign(headers, this.apiHeaders(args));
-        }
+
         return {
             method: 'POST',
             headers,
@@ -117,8 +141,11 @@ class CloudProxyWrapper {
      * @param {object} _options
      */
     async mkdir(path, _options) {
-        const res = await fetch(this.apiBase() + 'mkdir', Object.assign(
-            this.fetchOptionsWrite(), {
+        const apiBase = await this.apiBase();
+        const optionsWrite = await this.fetchOptionsWrite();
+
+        const res = await fetch(apiBase + 'mkdir', Object.assign(
+            optionsWrite, {
                 body: JSON.stringify({
                     path: this.localToRemote(path),
                 }),
@@ -130,9 +157,12 @@ class CloudProxyWrapper {
     }
 
     async readFile(path, options) {
-        const res = await fetch(this.apiBase() + 'read_file', this.fetchOptionsRead({
+        const apiBase = await this.apiBase();
+        const optionsRead = await this.fetchOptionsRead({
             path: this.localToRemote(path),
-        }));
+        });
+
+        const res = await fetch(apiBase + 'read_file', optionsRead);
         if (!res.ok) {
             throw new Error('fs api error');
         }
@@ -149,9 +179,12 @@ class CloudProxyWrapper {
     }
 
     async readdir(path, options) {
-        const res = await fetch(this.apiBase() + 'readdir', this.fetchOptionsRead({
+        const apiBase = await this.apiBase();
+        const optionsRead = await this.fetchOptionsRead({
             path: this.localToRemote(path),
-        }));
+        });
+
+        const res = await fetch(apiBase + 'readdir', optionsRead);
         if (!res.ok) {
             throw new Error('fs api error');
         }
@@ -187,8 +220,11 @@ class CloudProxyWrapper {
      * @param {string} destPath
      */
     async rename(path, destPath) {
-        const res = await fetch(this.apiBase() + 'rename', Object.assign(
-            this.fetchOptionsWrite(), {
+        const apiBase = await this.apiBase();
+        const optionsWrite = await this.fetchOptionsWrite();
+
+        const res = await fetch(apiBase + 'rename', Object.assign(
+            optionsWrite, {
                 body: JSON.stringify({
                     path: this.localToRemote(path),
                     destPath: this.localToRemote(destPath),
@@ -206,8 +242,11 @@ class CloudProxyWrapper {
     }
 
     async rmdir(path, _options) {
-        const res = await fetch(this.apiBase() + 'rmdir', Object.assign(
-            this.fetchOptionsWrite(), {
+        const apiBase = await this.apiBase();
+        const optionsWrite = await this.fetchOptionsWrite();
+
+        const res = await fetch(apiBase + 'rmdir', Object.assign(
+            optionsWrite, {
                 body: JSON.stringify({
                     path: this.localToRemote(path),
                 }),
@@ -222,9 +261,12 @@ class CloudProxyWrapper {
      * @param {string} path
      */
     async stat(path) {
-        const res = await fetch(this.apiBase() + 'stat', this.fetchOptionsRead({
+        const apiBase = await this.apiBase();
+        const optionsRead = await this.fetchOptionsRead({
             path: this.localToRemote(path),
-        }));
+        });
+
+        const res = await fetch(apiBase + 'stat', optionsRead);
         if (!res.ok) {
             throw new Error('stat failed');
         }
@@ -240,8 +282,11 @@ class CloudProxyWrapper {
      * @param {string} path
      */
     async unlink(path) {
-        const res = await fetch(this.apiBase() + 'unlink', Object.assign(
-            this.fetchOptionsWrite(), {
+        const apiBase = await this.apiBase();
+        const optionsWrite = await this.fetchOptionsWrite();
+
+        const res = await fetch(apiBase + 'unlink', Object.assign(
+            optionsWrite, {
                 body: JSON.stringify({
                     path: this.localToRemote(path),
                 }),
@@ -255,17 +300,20 @@ class CloudProxyWrapper {
     /**
      * Create or update document at `path`
      * @param {string} path
-     * @param {any} contents
+     * @param {any} contentsAny
      */
     async writeFile(path, contentsAny) {
+        const apiBase = await this.apiBase();
+        const apiHeaders = await this.apiHeaders({path: this.localToRemote(path)});
+
         const form = new FormData();
         const contents = Buffer.from(contentsAny);
         const name = pathOps.basename(path);
         form.append('file', contents, {filename: name, name});
-        const res = await fetch(this.apiBase() + 'write_file', {
+        const res = await fetch(apiBase + 'write_file', {
             method: 'POST',
             headers: Object.assign(
-                this.apiHeaders({path: this.localToRemote(path)}),
+                apiHeaders,
                 form.getHeaders()
             ),
             body: form,
@@ -280,9 +328,12 @@ class CloudProxyWrapper {
      * their checksum value
      */
     async getChecksumList() {
-        const res = await fetch(this.apiBase() + 'checksums', this.fetchOptionsRead());
+        const apiBase = await this.apiBase();
+        const optionsRead = await this.fetchOptionsRead();
+
+        const res = await fetch(apiBase + 'checksums', optionsRead);
         if (!res.ok) {
-            throw new Error(`fs api error: ${res.status} ${res.url}`);
+            throw new Error(`fs api error: ${res.status} ${res.url}`, res);
         }
         return await res.json();
     }
