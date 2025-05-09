@@ -1,11 +1,21 @@
 const https = require('https');
 
-const proxyRequestHandler = (req, res) => {
+const proxyRequestHandler = async (req, res) => {
     const input = req.params[0];
     if (!input.includes('://')) {
-        const proxyURL = `https://alpha.platform.datatime.space/${req.params[0]}`;
+        let serverUrl = 'stable.platform.datatime.space';
+        try {
+            const { loadHardwareInterfaceAsync } = require('../utilities.js');
+            const read = await loadHardwareInterfaceAsync('edgeAgent');
+            serverUrl = read('serverUrl'); // read the latest value from the edge agent
+            console.log(`proxyRequestHandler got serverUrl: ${serverUrl}`);
+        } catch (error) {
+            console.warn("error reading serverUrl from edge agent");
+        }
+
+        const proxyURL = `https://${serverUrl}/${req.params[0]}`;
         const headers = req.headers;
-        headers.Host = 'alpha.platform.datatime.space';
+        headers.Host = serverUrl;
         https.get(proxyURL, {headers}, proxyRes => {
             res.status(proxyRes.statusCode);
             for (let header in proxyRes.headers) {
