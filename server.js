@@ -1153,6 +1153,7 @@ function serverBeatSender(udpPort, oneTimeOnly = true) {
     client.bind(function () {
         client.setBroadcast(true);
         client.setTTL(timeToLive);
+        client.setMulticastInterface(services.ip);
         client.setMulticastTTL(timeToLive);
     });
 
@@ -1242,6 +1243,7 @@ async function objectBeatSender(PORT, thisId, thisIp, oneTimeOnly = false, immed
         client.setBroadcast(true);
         client.setTTL(timeToLive);
         client.setMulticastTTL(timeToLive);
+        client.setMulticastInterface(services.ip);
     });
 
     if (!oneTimeOnly) {
