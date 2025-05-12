@@ -1387,10 +1387,14 @@ function objectBeatServer() {
     });
 
     udpServer.on('message', async function (msg) {
-
         var msgContent;
         // check if object ping
-        msgContent = JSON.parse(msg);
+        try {
+            msgContent = JSON.parse(msg);
+        } catch (e) {
+            console.error('unknown udp message', e, msg);
+            return;
+        }
 
         if (msgContent.id && msgContent.ip && !checkObjectActivation(msgContent.id) && !(msgContent.id in knownObjects)) {
 
