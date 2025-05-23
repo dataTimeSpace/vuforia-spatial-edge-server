@@ -16,7 +16,7 @@
     "formidable": "^3",
     "ip": "^2.0.1",
     "jimp": "^0.22.12",
-    "ml-matrix": "^6.11.1",
+    "ml-matrix": "^6.12.1",
     "module-alias": "^2.2.3",
     "monaco-editor": "^0.50.0",
     "network-interfaces": "^1.1.0",
