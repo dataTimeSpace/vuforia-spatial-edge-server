@@ -15,7 +15,7 @@
     "form-data": "^4.0.2",
     "formidable": "^3",
     "ip": "^2.0.1",
-    "jimp": "^0.22.12",
+    "jimp": "^1.6.0",
     "ml-matrix": "^6.11.1",
     "module-alias": "^2.2.3",
     "monaco-editor": "^0.50.0",
