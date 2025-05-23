@@ -22,7 +22,7 @@
     "network-interfaces": "^1.1.0",
     "node-fetch": "^2.7.0",
     "node-persist": "^2.1.0",
-    "simple-git": "^3.25.0",
+    "simple-git": "^3.27.0",
     "toolsocket": "github:dataTimeSpace/toolsocket",
     "winston": "^3.14.1",
     "ws": "^8.18.0",
