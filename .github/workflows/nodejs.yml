@@ -35,19 +35,19 @@ jobs:
         CI: true
         ALLOW_SECURE_MODE: true
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       if: always()
       with:
         name: test-screenshots
         path: screenshots/
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       if: always()
       with:
         name: coverage
         path: coverage/
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       if: always()
       with:
         name: coverage-ui
@@ -89,7 +89,7 @@ jobs:
     #   with:
     #       token: ${{ secrets.CODECOV_TOKEN }}
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       if: always()
       with:
         name: test-screenshots
