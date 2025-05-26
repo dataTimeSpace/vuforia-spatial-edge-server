@@ -38,19 +38,19 @@ jobs:
     - uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: test-screenshots
+        name: test-screenshots-build
         path: screenshots/
 
     - uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: coverage
+        name: coverage-build
         path: coverage/
 
     - uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: coverage-ui
+        name: coverage-ui-build
         path: coverage-ui/
 
   build-insecure:
@@ -92,7 +92,7 @@ jobs:
     - uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: test-screenshots
+        name: test-screenshots-build-insecure
         path: screenshots/
 
   build-quiet:
