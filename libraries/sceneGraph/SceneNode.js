@@ -384,7 +384,7 @@ SceneNode.prototype.getSerializableCopy = function() {
         try {
             sceneNodeCopy[key] = JSON.parse(JSON.stringify(this[key]));
         } catch (e) {
-            console.error('error with serializing sceneNode key ' + key);
+            console.error('error with serializing sceneNode key ' + key, e);
         }
     }
     return sceneNodeCopy;

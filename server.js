@@ -52,7 +52,7 @@
 
 try {
     require('module-alias/register');
-} catch (err) {
+} catch (_err) {
     console.clear();
     console.warn('\x1b[33mYou\'re not done with the installation! You need to execute the following commands:');
     console.warn('\x1b[0m1.\x1b[32m npm install');
@@ -76,7 +76,7 @@ try {
 }
 
 const _logger = require('./logger');
-const {objectsPath, beatPort, serverPort, allowSecureMode, persistToCloud} = require('./config');
+const {objectsPath, beatPort, serverPort, allowSecureMode} = require('./config');
 const {providedServices} = require('./services');
 
 const os = require('os');
@@ -683,7 +683,7 @@ async function loadObjects() {
                 try {
                     obj.targetId = await utilities.getTargetIdFromTargetDat(path.join(objectsPath, objectFolderList[i], identityFolderName, 'target'));
                 } catch (e) {
-                    console.warn(`object ${tempFolderName} has no targetId in .dat file, or no .dat file`);
+                    console.warn(`object ${tempFolderName} has no targetId in .dat file, or no .dat file`, e);
                 }
 
                 migrateObjectValuesToFrames(obj, tempFolderName);
@@ -2846,7 +2846,7 @@ function objectWebServer() {
                                         objects[thisObjectId].targetId = targetUniqueId;
                                         console.log(`set targetId for ${thisObjectId} to ${targetUniqueId}`);
                                     } catch (e) {
-                                        console.log('unable to extract targetId from dat file');
+                                        console.log('unable to extract targetId from dat file', e);
                                     }
                                     // Step 1) - resize image if necessary. Vuforia can make targets from jpgs of up to 2048px
                                     // but we scale down to 1024px for a larger margin of error and (even) smaller filesize
@@ -3878,7 +3878,7 @@ function socketServer() {
                 const msg = typeof msgRaw === 'string' ? JSON.parse(msgRaw) : msgRaw;
                 signallingController.onMessage(socket, msg);
             } catch (e) {
-                console.error('Malformed signalling message', msgRaw);
+                console.error('Malformed signalling message', msgRaw, e);
             }
         });
 

@@ -189,7 +189,7 @@ class DataStreamInterface {
         try {
             dataSourceInstance = this.castToDataSource(dataSource);
         } catch (e) {
-            console.warn('trying to add improper data as a dataSource', dataSource);
+            console.warn('trying to add improper data as a dataSource', dataSource, e);
         }
         if (!dataSourceInstance) return;
 

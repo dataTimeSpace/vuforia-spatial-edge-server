@@ -82,6 +82,7 @@ class CloudProxyWrapper {
                 serverUrl: read('serverUrl'),
             };
         } catch (error) {
+            console.warn('unable to read settings', error);
             return null;
         }
     }

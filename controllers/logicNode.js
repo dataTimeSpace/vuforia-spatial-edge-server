@@ -80,7 +80,7 @@ const deleteLogicNode = function (objectID, frameID, nodeID, lastEditor) {
         try {
             foundFrame.nodes[nodeID].deconstruct();
         } catch (e) {
-            console.warn('(Logic) Node exists without proper prototype: ' + nodeID);
+            console.warn('(Logic) Node exists without proper prototype: ' + nodeID, e);
         }
         delete foundFrame.nodes[nodeID];
 

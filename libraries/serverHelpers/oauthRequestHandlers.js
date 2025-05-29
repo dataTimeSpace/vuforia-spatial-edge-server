@@ -12,6 +12,7 @@ const oauthRefreshRequestHandler = (req, res) => {
     try {
         secrets = getFrameSecrets(frameName);
     } catch (e) {
+        console.warn('unable to getFrameSecrets', e);
         res.status(400).send({error: `Invalid frameName "${frameName}"`});
         return;
     }
@@ -55,6 +56,7 @@ const oauthAcquireRequestHandler = (req, res) => {
     try {
         secrets = getFrameSecrets(frameName);
     } catch (e) {
+        console.warn('unable to getFrameSecrets', e);
         res.status(400).send({error: `Invalid frameName "${frameName}"`});
         return;
     }

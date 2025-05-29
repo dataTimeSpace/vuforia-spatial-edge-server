@@ -94,11 +94,13 @@ class Synchronizer {
 
     /**
      * Start syncing process
-     * @param {string?} onSyncDoneHook webhook url to be hit when syncing is done
+     * @param {string?} newOnSyncDoneHook webhook url to be hit when syncing is done
      */
-    async startSync(onSyncDoneHook) {
+    async startSync(newOnSyncDoneHook) {
         try {
-            this.onSyncDoneHooks.push(onSyncDoneHook);
+            if (newOnSyncDoneHook) {
+                this.onSyncDoneHooks.push(newOnSyncDoneHook);
+            }
             if (this.enableSyncing) {
                 return;
             }
