@@ -656,7 +656,7 @@ exports.updateObject = async function updateObject(objectName, objects) {
         } catch (e) {
             objects[tempFolderName].ip = ip.address();
             objects[tempFolderName].objectId = tempFolderName;
-            console.warn('No saved data for: ' + tempFolderName);
+            console.warn('No saved data for: ' + tempFolderName, e);
         }
         return tempFolderName;
     }
@@ -720,7 +720,7 @@ exports.loadHardwareInterface = function loadHardwareInterface(hardwareInterface
         var fileContents = fs.readFileSync(hardwareFolder + 'settings.json', 'utf8');
         hardwareInterfaces[hardwareInterfaceName] = JSON.parse(fileContents);
     } catch (e) {
-        console.error('Could not load settings.json for: ' + hardwareInterfaceName);
+        console.error('Could not load settings.json for: ' + hardwareInterfaceName, e);
         if (!hardwareInterfaces[hardwareInterfaceName]) {
             hardwareInterfaces[hardwareInterfaceName] = {};
         }
@@ -756,7 +756,7 @@ exports.loadHardwareInterfaceAsync = async function loadHardwareInterfaceAsync(h
         const fileContents = await fsProm.readFile(hardwareFolder + 'settings.json', 'utf8');
         hardwareInterfaces[hardwareInterfaceName] = JSON.parse(fileContents);
     } catch (e) {
-        console.error('Could not load settings.json for: ' + hardwareInterfaceName);
+        console.error('Could not load settings.json for: ' + hardwareInterfaceName, e);
         if (!hardwareInterfaces[hardwareInterfaceName]) {
             hardwareInterfaces[hardwareInterfaceName] = {};
         }

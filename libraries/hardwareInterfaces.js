@@ -152,7 +152,7 @@ exports.clearObject = function (objectUuid, toolUuid) {
                 try {
                     objects[objectID].frames[toolUuid].nodes[key].deconstruct();
                 } catch (e) {
-                    console.warn('Node exists without proper prototype: ' + key);
+                    console.warn('Node exists without proper prototype: ' + key, e);
                 }
                 delete objects[objectID].frames[toolUuid].nodes[key];
             }
@@ -173,7 +173,7 @@ exports.removeAllNodes = function (object, tool) {
                     try {
                         objects[objectID].frames[frameID].nodes[nodeKey].deconstruct();
                     } catch (e) {
-                        console.warn('Node exists without proper prototype: ' + nodeKey);
+                        console.warn('Node exists without proper prototype: ' + nodeKey, e);
                     }
                     delete objects[objectID].frames[frameID].nodes[nodeKey];
                 }
@@ -636,7 +636,7 @@ exports.removeNode = function (object, tool, node) {
                     try {
                         thisNode.deconstruct();
                     } catch (e) {
-                        console.warn('Node exists without proper prototype: ' + nodeID);
+                        console.warn('Node exists without proper prototype: ' + nodeID, e);
                     }
                     delete objects[objectID].frames[frameID].nodes[nodeID];
                 }
@@ -773,7 +773,7 @@ exports.getMarkerSize = function (object) {
         const objectID = utilities.readObject(objectLookup, object);
         return objects[objectID].targetSize;
     } catch (e) {
-        console.warn('Cannot get markerSize for ' + object + ', returning (0,0)');
+        console.warn('Cannot get markerSize for ' + object + ', returning (0,0)', e);
         return { width: 0, height: 0};
     }
 };
@@ -920,6 +920,7 @@ async function setHardwareInterfaceEnabled(interfaceName, shouldBeEnabled, callb
             callback(false, 'saveToDisk globally disabled for this server');
         }
     } catch (e) {
+        console.warn('Error saving hardware interface settings to disk for ' + interfaceName, e);
         // Trying default settings
         var defaultSettings = {
             enabled: shouldBeEnabled
@@ -928,7 +929,7 @@ async function setHardwareInterfaceEnabled(interfaceName, shouldBeEnabled, callb
             fsProm.writeFile(interfaceSettingsPath, JSON.stringify(defaultSettings, null, 4));
             callback(true);
         } catch (err) {
-            console.error('Error saving hardware interface settings to disk for ' + interfaceName + '', e);
+            console.error('Error saving default hardware interface settings to disk for ' + interfaceName, err);
             callback(false, 'error writing to file');
         }
     }

@@ -10,7 +10,7 @@ const proxyRequestHandler = async (req, res) => {
             serverUrl = read('serverUrl'); // read the latest value from the edge agent
             console.log(`proxyRequestHandler got serverUrl: ${serverUrl}`);
         } catch (error) {
-            console.warn("error reading serverUrl from edge agent");
+            console.warn("error reading serverUrl from edge agent", error);
         }
 
         const proxyURL = `https://${serverUrl}/${req.params[0]}`;

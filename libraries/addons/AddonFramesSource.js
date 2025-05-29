@@ -85,6 +85,7 @@ class AddonFramesSource {
             try {
                 this.frameTypeModules[frameName].metadata = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
             } catch (e) {
+                console.warn('unable to read frameTypeModule metadata', frameName, e);
                 // No saved frame settings for this frame
                 this.frameTypeModules[frameName].metadata = {};
             }

@@ -41,7 +41,7 @@ exports.snapshotDirectory = function snapshotDirectory(dir) {
             const contents = fs.readFileSync(dePath, {encoding: 'utf8'});
             try {
                 snapshot[dePath] = JSON.parse(contents);
-            } catch (e) {
+            } catch (_e) {
                 snapshot[dePath] = contents;
             }
 

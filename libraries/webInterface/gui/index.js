@@ -2002,7 +2002,7 @@ realityServer.gotClick = function (event) {
                     }
 
                 } catch (e) {
-                    console.error('json parse error for (action=new&name=\'' + objectName + '\') response: ' + state);
+                    console.error('json parse error for (action=new&name=\'' + objectName + '\') response: ' + state, e);
                 }
             }
 
@@ -2151,7 +2151,7 @@ realityServer.sendRequest = function (url, httpStyle, callback, body) {
 
     } catch (e) {
         callback('err');
-        console.error('could not connect to' + url);
+        console.error('could not connect to' + url, e);
     }
 };
 

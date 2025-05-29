@@ -315,7 +315,7 @@ const deleteFrame = async function(objectId, frameId, body, callback) {
     try {
         object.frames[frameId].deconstruct();
     } catch (e) {
-        console.warn('Frame exists without proper prototype: ' + frameId);
+        console.warn('Frame exists without proper prototype: ' + frameId, e);
     }
     delete object.frames[frameId];
 

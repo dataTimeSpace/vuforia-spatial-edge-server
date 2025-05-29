@@ -78,7 +78,7 @@ class SplatTask {
             try {
                 responseText = await res.text();
             } catch (e) {
-                console.warn(`error parsing SplatTask /upload response (status ${res.status})`);
+                console.warn(`error parsing SplatTask /upload response (status ${res.status})`, e);
                 this.error = 'Unable to process the training server\'s response.';
                 return;
             }
@@ -92,7 +92,7 @@ class SplatTask {
                 try {
                     this.error = JSON.parse(responseText).error;
                 } catch (e) {
-                    console.warn(`error parsing SplatTask /upload response (status ${res.status})`);
+                    console.warn(`error parsing SplatTask /upload response (status ${res.status})`, e);
                     this.error = 'Unable to process the training server\'s response.';
                 }
                 return null;
@@ -118,7 +118,7 @@ class SplatTask {
         let message;
         try {
             message = JSON.parse(event.data);
-        } catch (e) {
+        } catch (_e) {
             console.error('SplatTask: json parse error', event.data);
             return;
         }

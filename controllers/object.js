@@ -41,6 +41,7 @@ const deleteObject = async function(objectID) {
     try {
         await utilities.deleteObject(object.name, objects, objectLookup, activeHeartbeats, knownObjects, sceneGraph, setAnchors);
     } catch (e) {
+        console.warn(`Error deleting object ${objectID}`, e);
         return {
             status: 500,
             error: `Error deleting object ${objectID}`
@@ -311,6 +312,7 @@ const deactivate = function(objectID, callback) {
         sceneGraph.deactivateElement(objectID);
         callback(200, 'ok');
     } catch (e) {
+        console.warn('unable to deactivate object', e);
         callback(404, {success: false, error: 'cannot find object with ID' + objectID});
     }
 };
@@ -322,6 +324,7 @@ const activate = function(objectID, callback) {
         sceneGraph.activateElement(objectID);
         callback(200, 'ok');
     } catch (e) {
+        console.warn('unable to activate object', e);
         callback(404, {success: false, error: 'cannot find object with ID' + objectID});
     }
 };
@@ -337,6 +340,7 @@ const setVisualization = function(objectID, vis, callback) {
         utilities.writeObjectToFile(objects, objectID, globalVariables.saveToDisk);
         callback(200, 'ok');
     } catch (e) {
+        console.warn('unable to setVisualization', e);
         callback(500, {success: false, error: e.message});
     }
 };
@@ -377,6 +381,7 @@ const generateXml = async function(objectID, body, callback) {
     try {
         await fsProm.writeFile(xmlOutFile, documentcreate);
     } catch (err) {
+        console.warn('unable to writeFile', err);
         callback(500, 'error writing new target size to .xml file for ' + objectID);
     }
 
@@ -565,7 +570,7 @@ const uploadTarget = async (objectName, req, res) => {
                     await fsProm.rename(originalFilepath, newFilepath);
                     resolve();
                 } catch (e) {
-                    reject(`error renaming ${originalFilepath} to ${newFilepath}`);
+                    reject(`error renaming ${originalFilepath} to ${newFilepath}`, e);
                 }
             })();
         });

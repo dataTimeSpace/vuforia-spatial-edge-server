@@ -88,7 +88,7 @@ exports.generateHtmlForHardwareInterface = function(hardwareInterfaceName, hardw
         html = fs.readFileSync(configHtmlPath, 'utf8');
     } catch (e) {
         let errorMessage = 'Couldn\'t find config.html file for hardwareInterface: ' + hardwareInterfaceName + ' at path: ' + configHtmlPath;
-        console.warn(errorMessage);
+        console.warn(errorMessage, e);
         return errorMessage; // render error message instead of html
     }
 
