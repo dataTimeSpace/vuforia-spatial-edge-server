@@ -13,7 +13,7 @@
  * @param {string} interfaceName - exact name of the hardware interface
  * @constructor
  */
-function InterfaceConfig(interfaceName) { // eslint-disable-line no-unused-vars
+function InterfaceConfig(interfaceName) {
     this.interfaceName = interfaceName;
     this.pendingIos = [];
     let self = this;

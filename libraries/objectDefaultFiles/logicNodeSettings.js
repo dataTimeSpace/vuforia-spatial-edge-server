@@ -231,7 +231,7 @@ spatialObject.messageCallBacks.mainCall = function (msgContent) {
 
 // these are functions used for the setup of logic blocks
 
-function SpatialLogic() { // eslint-disable-line no-unused-vars
+function SpatialLogic() {
     this.publicData = spatialObject.publicData;
 
     this.readPublicData = function (valueName, value) {

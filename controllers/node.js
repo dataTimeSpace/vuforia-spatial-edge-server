@@ -133,7 +133,7 @@ const deleteNodeLock = function (objectKey, frameKey, nodeKey, password) {
  * Updates the x, y, scale, and/or matrix for the specified frame or node
  * @todo this function is a mess, fix it up
  */
-const changeSize = function (objectID, frameID, nodeID, body, callback) { // eslint-disable-line no-inner-declarations
+const changeSize = function (objectID, frameID, nodeID, body, callback) {
     if (nodeID === 'null') { nodeID = null; }
 
     utilities.getFrameOrNode(objects, objectID, frameID, nodeID, async function (error, object, frame, node) {

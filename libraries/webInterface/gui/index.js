@@ -417,7 +417,7 @@ realityServer.updateManageObjects = function (thisItem2) {
                     'Download a .zip backup of this world object. Unzip it into your spatialToolbox directory to' +
                     ' restore the object on this or a different edge server.');
 
-                function addDeleteListener(button, container, thisObjectKey) { // eslint-disable-line no-inner-declarations
+                function addDeleteListener(button, container, thisObjectKey) {
                     button.addEventListener('click', function () {
                         // add a expandcollapse div with Sure? Yes
                         let alreadyOpen = container.querySelector('.expandcollapse');
@@ -764,7 +764,7 @@ realityServer.updateManageObjects = function (thisItem2) {
                 thisFrame.dom.querySelector('.' + className).id = 'frame' + objectKey + frameKey;
 
                 // clicking on the "Content" button opens the html for that frame
-                function addLinkToContent(buttonDiv, frameType) { // eslint-disable-line no-inner-declarations
+                function addLinkToContent(buttonDiv, frameType) {
                     buttonDiv.addEventListener('click', function () { // put in a closure so it references don't mutate
                         let ipAddress = realityServer.states.ipAdress.interfaces[realityServer.states.ipAdress.activeInterface];
                         window.open(location.protocol + '//' + ipAddress + ':' + realityServer.states.serverPort + '/frames/' + frameType + '/index.html', '_blank'); // opens in new tab (instead of window.location.href = )
@@ -870,7 +870,7 @@ realityServer.updateManageFrames = function () {
     for (let frameKey in this.globalFrames) {
         let frameInfo = this.globalFrames[frameKey];
         frameInfo.dom = this.templates['frameManager'].content.cloneNode(true);
-        function addLinkToContent(buttonDiv, frameType) { // eslint-disable-line no-inner-declarations
+        function addLinkToContent(buttonDiv, frameType) {
             buttonDiv.addEventListener('click', function () {
                 let ipAddress = realityServer.states.ipAdress.interfaces[realityServer.states.ipAdress.activeInterface];
                 // window.location.href = location.protocol + '//' + ipAddress + ':8080/frames/active/' + frameType + '/index.html';
@@ -1009,7 +1009,7 @@ realityServer.updateManageHardwareInterfaces = function () {
                 ' restart your server and refresh this page. When you do so, you can then configure it here.');
         }
 
-        function addHardwareInterfaceEnabledToggle(button, hardwareInterfaceName, hardwareInterfaceInfo) { // eslint-disable-line no-inner-declarations
+        function addHardwareInterfaceEnabledToggle(button, hardwareInterfaceName, hardwareInterfaceInfo) {
             button.addEventListener('click', function () {
                 if (hardwareInterfaceInfo.enabled) {
                     realityServer.sendRequest('/hardwareInterface/' + hardwareInterfaceName + '/disable/', 'GET', function (state) {
@@ -1077,7 +1077,7 @@ realityServer.updateCommonContents = function (thisItem2) {
         this.getCommonContents().appendChild(this.templates['tabs'].content.cloneNode(true));
 
         // tabName is manageObjects, manageFrames, or manageHardwareInterfaces
-        function addTabListener(tabName) { // eslint-disable-line no-inner-declarations
+        function addTabListener(tabName) {
             realityServer.getCommonContents().querySelector('#' + tabName).addEventListener('click', function () {
                 if (realityServer.selectedTab === tabName && tabName === 'manageObjects') {
                     // refresh page if click on same tab
@@ -1801,7 +1801,7 @@ realityServer.gotClick = function (event) {
                     newNode = document.getElementById('contentDropZoneId').content.cloneNode(true);
                     referenceNode.before(newNode);
 
-                    function getLevels(thisLevel, level) { // eslint-disable-line no-inner-declarations
+                    function getLevels(thisLevel, level) {
                         level = level + 1;
                         let nameDepth, xDepth, xDepth2;
 

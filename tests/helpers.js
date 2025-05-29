@@ -100,7 +100,7 @@ exports.getObject = async function getObject(id) {
  * Wait for /allObjects to be present and populated with `lengthMin` objects
  */
 async function waitForObjects(lengthMin = 1) {
-    // eslint-disable-next-line no-constant-condition
+
     while (true) {
         try {
             let allObjects = await getAllObjects();

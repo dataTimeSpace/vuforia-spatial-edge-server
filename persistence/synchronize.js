@@ -7,7 +7,7 @@ const makeChecksumList = require('./makeChecksumList.js');
 
 const DEBUG = false;
 
-const worldRe = /(_WORLD_[^/]+)/
+const worldRe = /(_WORLD_[^/]+)/;
 function getWorld(diffPath) {
     let matches = worldRe.exec(diffPath);
     if (!matches) {
