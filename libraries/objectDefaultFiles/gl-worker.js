@@ -312,7 +312,7 @@ window.addEventListener('message', function(event) {
     }
 });
 
-// eslint-disable-next-line no-unused-vars
+
 class ThreejsInterface {
     constructor(spatialInterface, injectThree) {
         if (injectThree) {
@@ -453,12 +453,12 @@ class ThreejsInterface {
                         proxy.__uncloneableObj = null;
                         delete proxy.__uncloneableObj;
                     }
-                    // eslint-disable-next-line no-global-assign
+
                     proxies = [];
                     this.realRenderer.dispose();
                     this.realRenderer.forceContextLoss();
                     this.realRenderer = null;
-                    // eslint-disable-next-line no-global-assign
+
                     realGl = null;
                     extVao = null;
                 }

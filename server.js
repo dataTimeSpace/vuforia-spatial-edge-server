@@ -2894,7 +2894,7 @@ function objectWebServer() {
                                 }
 
                                 // Step 2) - Generate a default XML file if needed
-                                async function continueProcessingUpload() { // eslint-disable-line no-inner-declarations
+                                async function continueProcessingUpload() {
                                     if (!autoGenerateXml) {
                                         await onXmlVerified();
                                         return;
@@ -2923,7 +2923,7 @@ function objectWebServer() {
                                 }
 
                                 // create the object data and respond to the webFrontend once the XML file is confirmed to exist
-                                async function onXmlVerified(err) { // eslint-disable-line no-inner-declarations
+                                async function onXmlVerified(err) {
                                     let thisObjectId = utilities.readObject(objectLookup, req.params.id);
 
                                     if (err) {
