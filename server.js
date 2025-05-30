@@ -78,6 +78,10 @@ try {
 const _logger = require('./logger');
 const {objectsPath, beatPort, serverPort, allowSecureMode} = require('./config');
 const {providedServices} = require('./services');
+const {
+    getShutdownSecretFromArgs,
+    verifyShutdownRequest,
+} = require('./libraries/mobile/mobileShutdown');
 
 const os = require('os');
 const {isLightweightMobile, isStandaloneMobile} = require('./isMobile.js');
@@ -2103,6 +2107,24 @@ function objectWebServer() {
                 exit();
             }
         });
+
+        // If the server args includes a 32-byte base-64 encoded secret, then enable a special /shutdown/ route
+        const SHUTDOWN_SECRET = getShutdownSecretFromArgs();
+
+        if (SHUTDOWN_SECRET) {
+            console.info('POST /shutdown/ route is enabled, with secret', SHUTDOWN_SECRET);
+            webServer.post('/shutdown/', function (req, res) {
+                if (!verifyShutdownRequest(req, SHUTDOWN_SECRET)) {
+                    return res.status(403).send('Forbidden: Invalid shutdown token');
+                }
+
+                console.info('Authorized shutdown request received');
+                res.send('Shutting down server...');
+                exit();
+            });
+        } else {
+            console.info('POST /shutdown/ route is disabled');
+        }
 
         webServer.get('/server/networkInterface/:activeInterface/', function (req, res) {
             services.ips.activeInterface = req.params.activeInterface;
