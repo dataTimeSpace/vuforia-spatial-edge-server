@@ -20,6 +20,7 @@
 const path = require('path');
 const fsProm = require('../persistence/fsProm.js');
 const utilities = require('./utilities');
+const {pathJoinRooted} = utilities;
 const Node = require('../models/Node.js');
 const Frame = require('../models/Frame.js');
 const ObjectModel = require('../models/ObjectModel.js');
@@ -476,9 +477,9 @@ exports.setTool = function (object, tool, newTool, dirName) {
 exports.addNode = function (object, tool, node, type, position) {
     let objectID = utilities.readObject(objectLookup, object);
     if (!objectID) {
-        var folder = path.join(objectsPath, object);
-        var identityPath = path.join(folder, '.identity');
-        var jsonFilePath = path.join(identityPath, 'object.json');
+        var folder = pathJoinRooted(objectsPath, object);
+        var identityPath = pathJoinRooted(folder, '.identity');
+        var jsonFilePath = pathJoinRooted(identityPath, 'object.json');
         objectID = object + utilities.uuidTime();
 
         utilities.createFolder(object); // todo may need to `await` this
@@ -839,7 +840,7 @@ exports.getDebug = function () {
  * @param {successCallback} callback
  */
 async function setHardwareInterfaceSettings(interfaceName, settings, limitToKeys, callback) {
-    var interfaceSettingsPath = path.join(objectsPath, identityFolderName, interfaceName, 'settings.json');
+    var interfaceSettingsPath = pathJoinRooted(objectsPath, identityFolderName, interfaceName, 'settings.json');
 
     try {
         const rawSettings = await fsProm.readFile(interfaceSettingsPath, 'utf8') || '{}';
@@ -900,7 +901,7 @@ exports.setHardwareInterfaceSettings = setHardwareInterfaceSettings;
  * @param {successCallback} callback
  */
 async function setHardwareInterfaceEnabled(interfaceName, shouldBeEnabled, callback) {
-    var interfaceSettingsPath = path.join(objectsPath, identityFolderName, interfaceName, 'settings.json');
+    var interfaceSettingsPath = pathJoinRooted(objectsPath, identityFolderName, interfaceName, 'settings.json');
 
     try {
         const rawSettings = await fsProm.readFile(interfaceSettingsPath, 'utf8') || '{}';
