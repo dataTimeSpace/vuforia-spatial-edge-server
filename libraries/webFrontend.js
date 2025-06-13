@@ -44,7 +44,7 @@
  */
 
 const utilities = require('./utilities');
-const {fileExists} = utilities;
+const {fileExists, pathJoinRooted} = utilities;
 var fs = require('fs');
 var debug = false;
 var path = require('path');
@@ -148,9 +148,9 @@ exports.printFolder = async function printFolder(objects, objectsPath, _debug, o
         }
 
         // check if the object is correctly initialized with tracking targets
-        var datExists = await fileExists(path.join(objectsPath, objectKey, identityFolderName, '/target/target.dat'));
-        var xmlExists = await fileExists(path.join(objectsPath, objectKey, identityFolderName, '/target/target.xml'));
-        var jpgExists = await fileExists(path.join(objectsPath, objectKey, identityFolderName, '/target/target.jpg'));
+        var datExists = await fileExists(pathJoinRooted(objectsPath, objectKey, identityFolderName, '/target/target.dat'));
+        var xmlExists = await fileExists(pathJoinRooted(objectsPath, objectKey, identityFolderName, '/target/target.xml'));
+        var jpgExists = await fileExists(pathJoinRooted(objectsPath, objectKey, identityFolderName, '/target/target.jpg'));
 
         if ((xmlExists && datExists && jpgExists) || (xmlExists && jpgExists)) {
             newObject[thisObjectKey].initialized = true;
@@ -655,7 +655,7 @@ exports.uploadTargetContent = function (parm, objectsPath, objectInterfaceName) 
     if (debug) console.log('interface content');
     var text = '';
 
-    var objectPath2 = path.join(objectPath2, parm);
+    var objectPath2 = pathJoinRooted(objectPath2, parm);
 
     var listeliste = walk(objectPath2);
 
@@ -889,9 +889,9 @@ exports.uploadTargetContentFrame = function (parm, frame, objectsPath, objectInt
 
         '';
 
-    var framePath = path.join(objectsPath, parm);
+    var framePath = pathJoinRooted(objectsPath, parm);
 
-    var framePath2 = path.join(framePath, frame);
+    var framePath2 = pathJoinRooted(framePath, frame);
 
     var listeliste = walk(framePath2);
 
