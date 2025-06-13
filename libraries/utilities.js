@@ -1102,8 +1102,15 @@ function getVideoDir(objectName) {
 
 exports.getVideoDir = getVideoDir;
 
-// Ensures id is alphanumeric or -_
+/**
+ * Ensures id is alphanumeric or -_ and doesn't attempt prototype pollution
+ * @param {string} id
+ * @return {boolean} whether valid
+ */
 function isValidId(id) {
+    if (id === '__proto__' || id === 'constructor' || id === 'prototype') {
+        return false;
+    }
     return id.match(/^[A-Za-z0-9_ -]+$/);
 }
 
