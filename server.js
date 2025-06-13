@@ -150,9 +150,13 @@ const path = require('path');
 const DecompressZip = require('decompress-zip');
 const dirTree = require('directory-tree');
 
+// This file hosts all kinds of utilities programmed for the server
+const utilities = require('./libraries/utilities');
+const {fileExists, mkdirIfNotExists, rmdirIfExists, unlinkIfExists, pathJoinRooted} = utilities;
+
 const addonPaths = [
-    path.join(__dirname, 'addons'),
-    path.join(os.homedir(), 'Documents', 'spatialToolbox-addons'),
+    pathJoinRooted(__dirname, 'addons'),
+    pathJoinRooted(os.homedir(), 'Documents', 'spatialToolbox-addons'),
 ];
 
 const Addons = require('./libraries/addons/Addons');
@@ -163,14 +167,14 @@ const addons = new Addons(addonPaths);
 const addonFolders = addons.listAddonFolders();
 
 // The path to all frames types that this server hosts, containing a directory for each frame (containing the html/etc).
-const frameLibPaths = addonFolders.map(folder => path.join(folder, 'tools'));
+const frameLibPaths = addonFolders.map(folder => pathJoinRooted(folder, 'tools'));
 
 // All visual UI representations for IO Points are stored in this folder:
-const nodePaths = addonFolders.map(folder => path.join(folder, 'nodes'));
+const nodePaths = addonFolders.map(folder => pathJoinRooted(folder, 'nodes'));
 // All visual UI representations for logic blocks are stored in this folder:
-const blockPaths = addonFolders.map(folder => path.join(folder, 'blocks'));
+const blockPaths = addonFolders.map(folder => pathJoinRooted(folder, 'blocks'));
 // All interfaces for different hardware such as Arduino Yun, PI, Philips Hue are stored in this folder.
-const hardwareInterfacePaths = addonFolders.map(folder => path.join(folder, 'interfaces'));
+const hardwareInterfacePaths = addonFolders.map(folder => pathJoinRooted(folder, 'interfaces'));
 // The web service level on which objects are accessable. http(s)://<IP>:8080 <objectInterfaceFolder> <object>
 const objectInterfaceFolder = '/';
 
@@ -178,7 +182,7 @@ const objectInterfaceFolder = '/';
  ******************************************** Requirements ************************************************************
  **********************************************************************************************************************/
 const storage = require('./libraries/storage');
-let dir = path.join(require('os').homedir(), 'vst-edge-server');
+let dir = pathJoinRooted(require('os').homedir(), 'vst-edge-server');
 
 try {
     storage.initSync({dir: dir});
@@ -377,9 +381,6 @@ if (!isLightweightMobile) {
 
 // additional files containing project code
 
-// This file hosts all kinds of utilities programmed for the server
-const utilities = require('./libraries/utilities');
-const {fileExists, mkdirIfNotExists, rmdirIfExists, unlinkIfExists} = utilities;
 const nodeUtilities = require('./libraries/nodeUtilities');
 const recorder = require('./libraries/recorder');
 
@@ -596,7 +597,7 @@ nodeUtilities.setup(objects, sceneGraph, knownObjects, socketArray, globalVariab
 
         // statically serve the "public" directory in each hardware interface
         for (let folderName in hardwareInterfaceLoader.folderMap) {
-            let publicPath = path.join(hardwareInterfaceLoader.folderMap[folderName], folderName, 'public');
+            let publicPath = pathJoinRooted(hardwareInterfaceLoader.folderMap[folderName], folderName, 'public');
             webServer.use('/hardwareInterface/' + folderName + '/public', express.static(publicPath));
         }
     }
@@ -681,7 +682,7 @@ async function loadObjects() {
 
                 // update the targetId if needed
                 try {
-                    obj.targetId = await utilities.getTargetIdFromTargetDat(path.join(objectsPath, objectFolderList[i], identityFolderName, 'target'));
+                    obj.targetId = await utilities.getTargetIdFromTargetDat(pathJoinRooted(objectsPath, objectFolderList[i], identityFolderName, 'target'));
                 } catch (e) {
                     console.warn(`object ${tempFolderName} has no targetId in .dat file, or no .dat file`, e);
                 }
@@ -776,8 +777,8 @@ function executeInitialProcessBlockLinks() {
  * Create the json file if doesn't already exist
  */
 async function loadWorldObject() {
-    const identityPath = path.join(objectsPath, worldObjectName, '.identity');
-    const jsonFilePath = path.join(identityPath, 'object.json');
+    const identityPath = pathJoinRooted(objectsPath, worldObjectName, '.identity');
+    const jsonFilePath = pathJoinRooted(identityPath, 'object.json');
 
     // create a /.identity folder within it to hold the object.json data
     if (globalVariables.saveToDisk) {
@@ -824,8 +825,8 @@ async function loadWorldObject() {
 async function loadAnchor(anchorName) {
 
     // create the file for it if necessary
-    var identityPath = path.join(objectsPath, anchorName, '.identity');
-    var jsonFilePath = path.join(identityPath, 'object.json');
+    var identityPath = pathJoinRooted(objectsPath, anchorName, '.identity');
+    var jsonFilePath = pathJoinRooted(identityPath, 'object.json');
     let anchorUuid = anchorName + utilities.uuidTime();
 
     // create a /.identity folder within it to hold the object.json data
@@ -916,9 +917,9 @@ async function setAnchors() {
         // TODO: world objects are now considered initialized by default... update how anchor objects work (do they still require that the world has target data?)
         if (objects[key].isWorldObject || objects[key].type === 'world') {
             // check if the object is correctly initialized with tracking targets
-            let datExists = await fileExists(path.join(objectsPath, objects[key].name, identityFolderName, '/target/target.dat'));
-            let xmlExists = await fileExists(path.join(objectsPath, objects[key].name, identityFolderName, '/target/target.xml'));
-            let jpgExists = await fileExists(path.join(objectsPath, objects[key].name, identityFolderName, '/target/target.jpg'));
+            let datExists = await fileExists(pathJoinRooted(objectsPath, objects[key].name, identityFolderName, '/target/target.dat'));
+            let xmlExists = await fileExists(pathJoinRooted(objectsPath, objects[key].name, identityFolderName, '/target/target.xml'));
+            let jpgExists = await fileExists(pathJoinRooted(objectsPath, objects[key].name, identityFolderName, '/target/target.jpg'));
 
             if ((xmlExists && datExists && jpgExists) || (xmlExists && jpgExists)) {
                 hasValidWorldObject = true;
@@ -941,9 +942,9 @@ async function setAnchors() {
         }
 
         // check if the object is correctly initialized with tracking targets
-        let datExists = await fileExists(path.join(objectsPath, objects[key].name, identityFolderName, '/target/target.dat'));
-        let xmlExists = await fileExists(path.join(objectsPath, objects[key].name, identityFolderName, '/target/target.xml'));
-        let jpgExists = await fileExists(path.join(objectsPath, objects[key].name, identityFolderName, '/target/target.jpg'));
+        let datExists = await fileExists(pathJoinRooted(objectsPath, objects[key].name, identityFolderName, '/target/target.dat'));
+        let xmlExists = await fileExists(pathJoinRooted(objectsPath, objects[key].name, identityFolderName, '/target/target.xml'));
+        let jpgExists = await fileExists(pathJoinRooted(objectsPath, objects[key].name, identityFolderName, '/target/target.jpg'));
 
         if (xmlExists && (datExists || jpgExists)) {
             continue;
@@ -1214,13 +1215,13 @@ async function objectBeatSender(PORT, thisId, thisIp, oneTimeOnly = false, immed
     // try re-generating checksum if it doesn't exist - in some cases it gets
     // corrupted and beats won't send
     if (!objects[thisId].tcs) {
-        let targetDir = path.join(objectsPath, objects[thisId].name, identityFolderName, 'target');
-        let jpgPath = path.join(targetDir, 'target.jpg');
-        let datPath = path.join(targetDir, 'target.dat');
-        let xmlPath = path.join(targetDir, 'target.xml');
-        let glbPath = path.join(targetDir, 'target.glb');
-        let tdtPath = path.join(targetDir, 'target.3dt');
-        let splatPath = path.join(targetDir, 'target.splat');
+        let targetDir = pathJoinRooted(objectsPath, objects[thisId].name, identityFolderName, 'target');
+        let jpgPath = pathJoinRooted(targetDir, 'target.jpg');
+        let datPath = pathJoinRooted(targetDir, 'target.dat');
+        let xmlPath = pathJoinRooted(targetDir, 'target.xml');
+        let glbPath = pathJoinRooted(targetDir, 'target.glb');
+        let tdtPath = pathJoinRooted(targetDir, 'target.3dt');
+        let splatPath = pathJoinRooted(targetDir, 'target.splat');
         var fileList = [jpgPath, xmlPath, datPath, glbPath, tdtPath, splatPath];
         const tcs = await utilities.generateChecksums(objects, fileList);
         if (objects[thisId]) {
@@ -1554,8 +1555,8 @@ function objectWebServer() {
 
     if (isStandaloneMobile) {
         const LocalUIApp = require('./libraries/LocalUIApp.js');
-        const uiPath = path.join(__dirname, '../vuforia-spatial-toolbox-userinterface');
-        const alternativeUiPath = path.join(__dirname, '../userinterface'); // for backwards compatibility
+        const uiPath = pathJoinRooted(__dirname, '../vuforia-spatial-toolbox-userinterface');
+        const alternativeUiPath = pathJoinRooted(__dirname, '../userinterface'); // for backwards compatibility
         const selectedUiPath = fs.existsSync(uiPath) ? uiPath : alternativeUiPath;
         console.info('UI path for LocalUIApp: ' + selectedUiPath);
         const localUserInterfaceApp = new LocalUIApp(selectedUiPath, addonFolders);
@@ -1579,7 +1580,7 @@ function objectWebServer() {
             next();
             return;
         }
-        var fileName = path.join(frameLibPath, req.originalUrl.split('/frames/')[1]); //__dirname + '/libraries' + req.originalUrl;
+        var fileName = pathJoinRooted(frameLibPath, req.originalUrl.split('/frames/')[1]); //__dirname + '/libraries' + req.originalUrl;
         // we need to check without any ?options=xyz at the end or it might not find the file
         let fileNameWithoutQueryParams = fileName.split('?')[0];
         if (!await fileExists(fileNameWithoutQueryParams)) {
@@ -1926,7 +1927,7 @@ function objectWebServer() {
             res.status(400).send('Invalid file name. Cannot go up directories.');
             return;
         }
-        res.sendFile(path.join(nodePath, req.params.nodeName, 'gui', req.params.fileName));
+        res.sendFile(pathJoinRooted(nodePath, req.params.nodeName, 'gui', req.params.fileName));
     });
 
     // Version 2
@@ -1940,7 +1941,7 @@ function objectWebServer() {
             res.status(400).send('Invalid file name. Cannot go up directories.');
             return;
         }
-        res.sendFile(path.join(nodePath, req.params.nodeName, 'gui', req.params.fileName));
+        res.sendFile(pathJoinRooted(nodePath, req.params.nodeName, 'gui', req.params.fileName));
     });
 
     // Version 3 #### Active Version
@@ -1950,7 +1951,7 @@ function objectWebServer() {
             res.sendStatus(404);
             return;
         }
-        res.sendFile(path.join(nodePath, req.params.nodeName, 'gui', req.params.fileName));
+        res.sendFile(pathJoinRooted(nodePath, req.params.nodeName, 'gui', req.params.fileName));
     });
 
     // Version 3 #### Active Version
@@ -1960,7 +1961,7 @@ function objectWebServer() {
             res.sendStatus(404);
             return;
         }
-        res.sendFile(path.join(nodePath, req.params.nodeName, 'gui', req.params.fileName));
+        res.sendFile(pathJoinRooted(nodePath, req.params.nodeName, 'gui', req.params.fileName));
     });
 
     // Version 3 #### Active Version *1 Block *2 file
@@ -1970,7 +1971,7 @@ function objectWebServer() {
             res.sendStatus(404);
             return;
         }
-        res.sendFile(path.join(blockPath, req.params.blockName, 'gui', req.params.fileName));
+        res.sendFile(pathJoinRooted(blockPath, req.params.blockName, 'gui', req.params.fileName));
     });
 
     webServer.get('/logicBlock/:blockName/gui/:fileName/', function (req, res) {   // watch out that you need to make a "/" behind request.
@@ -1979,7 +1980,7 @@ function objectWebServer() {
             res.sendStatus(404);
             return;
         }
-        res.sendFile(path.join(blockPath, req.params.blockName, 'gui', req.params.fileName));
+        res.sendFile(pathJoinRooted(blockPath, req.params.blockName, 'gui', req.params.fileName));
     });
 
 
@@ -2083,7 +2084,7 @@ function objectWebServer() {
             }
 
             let interfacePath = hardwareInterfaceLoader.resolvePath(req.params.interfaceName);
-            let configHtmlPath = path.join(interfacePath, req.params.interfaceName, 'config.html');
+            let configHtmlPath = pathJoinRooted(interfacePath, req.params.interfaceName, 'config.html');
             res.send(webFrontend.generateHtmlForHardwareInterface(req.params.interfaceName, hardwareInterfaceModules, version, services.ips, serverPort, globalVariables.useHTTPS, configHtmlPath));
         });
 
@@ -2276,7 +2277,7 @@ function objectWebServer() {
                 res.sendStatus(404);
                 return;
             }
-            var framePath = path.join(frameLibPath, frameName);
+            var framePath = pathJoinRooted(frameLibPath, frameName);
 
             if (!await fileExists(framePath)) {
                 res.status(404).send('frame directory for ' + frameName + 'does not exist at ' + framePath);
@@ -2678,7 +2679,7 @@ function objectWebServer() {
                     var folderD = form.uploadDir;
                     if (getFileExtension(filename) === 'zip') {
                         try {
-                            var unzipper = new DecompressZip(path.join(folderD, filename));
+                            var unzipper = new DecompressZip(pathJoinRooted(folderD, filename));
 
                             unzipper.on('error', function (err) {
                                 console.error('Unzipper Error', err);
@@ -2811,7 +2812,7 @@ function objectWebServer() {
                     let autoGenerateXml = typeof req.headers.autogeneratexml !== 'undefined' ? JSON.parse(req.headers.autogeneratexml) : true;
                     fileInfoList = fileInfoList.filter(fileInfo => !fileInfo.completed); // Don't repeat processing for completed files
                     fileInfoList.forEach(async fileInfo => {
-                        if (!await fileExists(path.join(form.uploadDir, fileInfo.name))) { // Ignore files that haven't finished uploading
+                        if (!await fileExists(pathJoinRooted(form.uploadDir, fileInfo.name))) { // Ignore files that haven't finished uploading
                             return;
                         }
                         fileInfo.completed = true; // File has downloaded
@@ -2843,7 +2844,7 @@ function objectWebServer() {
                                 // extract the targetId from the dat file when the dat file is uploaded
                                 if (fileExtension === 'dat') {
                                     try {
-                                        let targetUniqueId = await utilities.getTargetIdFromTargetDat(path.join(folderD, identityFolderName, 'target'));
+                                        let targetUniqueId = await utilities.getTargetIdFromTargetDat(pathJoinRooted(folderD, identityFolderName, 'target'));
                                         let thisObjectId = utilities.readObject(objectLookup, req.params.id);
                                         objects[thisObjectId].targetId = targetUniqueId;
                                         console.log(`set targetId for ${thisObjectId} to ${targetUniqueId}`);
@@ -2911,7 +2912,7 @@ function objectWebServer() {
                                        '   </ARConfig>';
 
 
-                                    var xmlOutFile = path.join(folderD, identityFolderName, '/target/target.xml');
+                                    var xmlOutFile = pathJoinRooted(folderD, identityFolderName, '/target/target.xml');
                                     if (!await fileExists(xmlOutFile)) {
                                         try {
                                             await fsProm.writeFile(xmlOutFile, documentcreate);
@@ -2941,12 +2942,12 @@ function objectWebServer() {
                                         }
                                     }
 
-                                    let jpgPath = path.join(folderD, identityFolderName, '/target/target.jpg');
-                                    let datPath = path.join(folderD, identityFolderName, '/target/target.dat');
-                                    let xmlPath = path.join(folderD, identityFolderName, '/target/target.xml');
-                                    let glbPath = path.join(folderD, identityFolderName, '/target/target.glb');
-                                    let tdtPath = path.join(folderD, identityFolderName, '/target/target.3dt');
-                                    let splatPath = path.join(folderD, identityFolderName, '/target/target.splat');
+                                    let jpgPath = pathJoinRooted(folderD, identityFolderName, '/target/target.jpg');
+                                    let datPath = pathJoinRooted(folderD, identityFolderName, '/target/target.dat');
+                                    let xmlPath = pathJoinRooted(folderD, identityFolderName, '/target/target.xml');
+                                    let glbPath = pathJoinRooted(folderD, identityFolderName, '/target/target.glb');
+                                    let tdtPath = pathJoinRooted(folderD, identityFolderName, '/target/target.3dt');
+                                    let splatPath = pathJoinRooted(folderD, identityFolderName, '/target/target.splat');
 
                                     var fileList = [jpgPath, xmlPath, datPath, glbPath, tdtPath, splatPath];
 
@@ -3012,14 +3013,14 @@ function objectWebServer() {
                             } else if (fileExtension === 'zip') {
                                 const zipfileName = filename;
                                 try {
-                                    var unzipper = new DecompressZip(path.join(folderD, zipfileName));
+                                    var unzipper = new DecompressZip(pathJoinRooted(folderD, zipfileName));
 
                                     unzipper.on('error', function (err) {
                                         console.error('Unzipper error', err);
                                     });
 
                                     unzipper.on('extract', async function (_log) {
-                                        const targetFolderPath = path.join(folderD, identityFolderName, 'target');
+                                        const targetFolderPath = pathJoinRooted(folderD, identityFolderName, 'target');
                                         const folderFiles = await fsProm.readdir(targetFolderPath);
                                         const targetTypes = ['xml', 'dat', 'glb', 'unitypackage', '3dt', 'jpg', 'splat'];
 
@@ -3030,8 +3031,8 @@ function objectWebServer() {
                                             const folderFileType = folderFile.substr(folderFile.lastIndexOf('.') + 1);
                                             if (targetTypes.includes(folderFileType)) {
                                                 await fsProm.rename(
-                                                    path.join(targetFolderPath, folderFile),
-                                                    path.join(targetFolderPath, 'target.' + folderFileType)
+                                                    pathJoinRooted(targetFolderPath, folderFile),
+                                                    pathJoinRooted(targetFolderPath, 'target.' + folderFileType)
                                                 );
                                                 anyTargetsUploaded = true;
                                             }
@@ -3041,11 +3042,11 @@ function objectWebServer() {
                                                 function finishFn(folderName) {
                                                     return async function() {
                                                         // cleanup the target directory after uploading files
-                                                        let nestedTargetDirPath = path.join(folderD, identityFolderName, 'target', folderName);
+                                                        let nestedTargetDirPath = pathJoinRooted(folderD, identityFolderName, 'target', folderName);
 
                                                         try {
                                                             // Attempt to delete .DS_Store if it exists
-                                                            await fsProm.unlink(path.join(nestedTargetDirPath, '.DS_Store'));
+                                                            await fsProm.unlink(pathJoinRooted(nestedTargetDirPath, '.DS_Store'));
                                                         } catch (error) {
                                                             // Ignore if .DS_Store doesn't exist; display other warnings
                                                             if (error.code !== 'ENOENT') console.warn(error);
@@ -3059,8 +3060,8 @@ function objectWebServer() {
 
                                                         try {
                                                             await fsProm.rename(
-                                                                path.join(folderD, identityFolderName, 'target', 'authoringMesh.glb'),
-                                                                path.join(folderD, identityFolderName, 'target', 'target.glb')
+                                                                pathJoinRooted(folderD, identityFolderName, 'target', 'authoringMesh.glb'),
+                                                                pathJoinRooted(folderD, identityFolderName, 'target', 'target.glb')
                                                             );
                                                         } catch (e) {
                                                             console.log('no authoringMesh.glb to rename to target.glb', e);
@@ -3068,7 +3069,7 @@ function objectWebServer() {
 
                                                         try {
                                                             // Attempt to delete __MACOSX zip artifact, if it exists
-                                                            await fsProm.rmdir(path.join(folderD, identityFolderName, 'target', '__MACOSX'), { recursive: true });
+                                                            await fsProm.rmdir(pathJoinRooted(folderD, identityFolderName, 'target', '__MACOSX'), { recursive: true });
                                                         } catch (error) {
                                                             if (error.code !== 'ENOENT') console.warn(error);
                                                         }
@@ -3081,8 +3082,8 @@ function objectWebServer() {
                                                     const innerFolderFileType = innerFolderFile.substr(innerFolderFile.lastIndexOf('.') + 1);
                                                     if (targetTypes.includes(innerFolderFileType)) {
                                                         await fsProm.rename(
-                                                            path.join(targetFolderPath, folderFile, innerFolderFile),
-                                                            path.join(targetFolderPath, 'target.' + innerFolderFileType),
+                                                            pathJoinRooted(targetFolderPath, folderFile, innerFolderFile),
+                                                            pathJoinRooted(targetFolderPath, 'target.' + innerFolderFileType),
                                                         );
                                                         anyTargetsUploaded = true;
                                                     }
@@ -3090,7 +3091,7 @@ function objectWebServer() {
                                                     if (innerFolderFile === 'target.3dt') {
                                                         deferred = true;
                                                         // unzip target.3dt
-                                                        let unzipper3dt = new DecompressZip(path.join(targetFolderPath, 'target.3dt'));
+                                                        let unzipper3dt = new DecompressZip(pathJoinRooted(targetFolderPath, 'target.3dt'));
 
                                                         unzipper3dt.on('error', function (err) {
                                                             console.error('3dt Unzipper Error', err);
@@ -3118,11 +3119,11 @@ function objectWebServer() {
                                                 }
                                             }
                                         }
-                                        await fsProm.unlink(path.join(folderD, zipfileName));
+                                        await fsProm.unlink(pathJoinRooted(folderD, zipfileName));
 
                                         // evnetually create the object.
 
-                                        if (await fileExists(path.join(targetFolderPath, 'target.dat')) && await fileExists(path.join(targetFolderPath, 'target.xml'))) {
+                                        if (await fileExists(pathJoinRooted(targetFolderPath, 'target.dat')) && await fileExists(pathJoinRooted(targetFolderPath, 'target.xml'))) {
                                             await createObjectFromTarget(tmpFolderFile);
 
                                             //todo send init to internal modules
@@ -3144,7 +3145,7 @@ function objectWebServer() {
 
                                                 const fileList = [];
                                                 for (const ext of Object.keys(targetFileExts)) {
-                                                    const filePath = path.join(targetFolderPath, 'target.' + ext);
+                                                    const filePath = pathJoinRooted(targetFolderPath, 'target.' + ext);
                                                     fileList.push(filePath);
                                                     targetFileExts[ext] = await fileExists(filePath);
                                                 }
@@ -3188,7 +3189,7 @@ function objectWebServer() {
                                     });
 
                                     unzipper.extract({
-                                        path: path.join(folderD, identityFolderName, 'target'),
+                                        path: pathJoinRooted(folderD, identityFolderName, 'target'),
                                         filter: function (file) {
                                             return file.type !== 'SymbolicLink';
                                         }
@@ -3230,21 +3231,21 @@ function objectWebServer() {
 
             // delete target files
 
-            let targetDir = path.join(objectsPath, tmpFolderFile, identityFolderName, 'target');
+            let targetDir = pathJoinRooted(objectsPath, tmpFolderFile, identityFolderName, 'target');
             try {
-                await fsProm.unlink(path.join(targetDir, 'target.xml'));
+                await fsProm.unlink(pathJoinRooted(targetDir, 'target.xml'));
             } catch (e) {
-                console.error('Error while trying to delete ' + path.join(targetDir, 'target.xml'), e);
+                console.error('Error while trying to delete ' + pathJoinRooted(targetDir, 'target.xml'), e);
             }
             try {
-                await fsProm.unlink(path.join(targetDir, 'target.jpg'));
+                await fsProm.unlink(pathJoinRooted(targetDir, 'target.jpg'));
             } catch (e) {
-                console.error('Error while trying to delete ' + path.join(targetDir, 'target.jpg'), e);
+                console.error('Error while trying to delete ' + pathJoinRooted(targetDir, 'target.jpg'), e);
             }
             try {
-                await fsProm.unlink(path.join(targetDir, 'target.dat'));
+                await fsProm.unlink(pathJoinRooted(targetDir, 'target.dat'));
             } catch (e) {
-                console.error('Error while trying to delete ' + path.join(targetDir, 'target.dat'), e);
+                console.error('Error while trying to delete ' + pathJoinRooted(targetDir, 'target.dat'), e);
             }
 
             // recompute isAnchor (depends if there is an initialized world object)
@@ -3279,7 +3280,7 @@ async function createObjectFromTarget(folderVar) {
     let objectId = utilities.readObject(objectLookup, folderVar);
     let objectSizeXML = await utilities.getTargetSizeFromTarget(folderVar);
 
-    let targetUniqueId = await utilities.getTargetIdFromTargetDat(path.join(objectsPath, folderVar, identityFolderName, 'target'));
+    let targetUniqueId = await utilities.getTargetIdFromTargetDat(pathJoinRooted(objectsPath, folderVar, identityFolderName, 'target'));
 
     objects[objectId] = new ObjectModel(services.ip, version, protocol, objectId);
     objects[objectId].port = serverPort;
