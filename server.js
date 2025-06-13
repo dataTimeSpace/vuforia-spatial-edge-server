@@ -2594,7 +2594,7 @@ function objectWebServer() {
                                 // deconstructs the nodes on this frame too, if needed
                                 thisObject.frames[frameNameKey].deconstruct();
                             } catch (e) {
-                                console.warn('Frame exists without proper prototype: ' + frameNameKey, e);
+                                console.warn('Frame exists without proper prototype:', frameNameKey, e);
                             }
                             delete thisObject.frames[frameNameKey];
                         }
