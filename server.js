@@ -2087,9 +2087,11 @@ function objectWebServer() {
             res.send(webFrontend.generateHtmlForHardwareInterface(req.params.interfaceName, hardwareInterfaceModules, version, services.ips, serverPort, globalVariables.useHTTPS, configHtmlPath));
         });
 
-        // Proxies requests to spatial.ptc.io, for CORS video playback
-        const proxyRequestHandler = require('./libraries/serverHelpers/proxyRequestHandler.js');
-        webServer.get('/proxy/*', proxyRequestHandler);
+        if (process.env.NODE_ENV === 'development') {
+            // Proxies requests to spatial.ptc.io, for CORS video playback
+            const proxyRequestHandler = require('./libraries/serverHelpers/proxyRequestHandler.js');
+            webServer.get('/proxy/*', proxyRequestHandler);
+        }
 
         const {oauthRefreshRequestHandler, oauthAcquireRequestHandler} = require('./libraries/serverHelpers/oauthRequestHandlers.js');
         webServer.post('/oauthRefresh', oauthRefreshRequestHandler);
