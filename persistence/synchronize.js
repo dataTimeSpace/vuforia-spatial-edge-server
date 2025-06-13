@@ -127,6 +127,13 @@ class Synchronizer {
             }
 
             for (let onSyncDoneHook of this.onSyncDoneHooks) {
+                const url = new URL(onSyncDoneHook);
+                if (!url.origin.endsWith('.datatime.space') ||
+                    url.pathname !== '/servers/finalizePersistAndClone') {
+                    console.warn('Invalid callback url', url);
+                    continue;
+                }
+
                 const apiHeaders = await remote.fetchOptionsWrite();
                 await fetch(onSyncDoneHook, {
                     ...apiHeaders, // includes method: POST, and headers (with Authorization)
