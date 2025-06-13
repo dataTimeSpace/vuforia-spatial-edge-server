@@ -1194,13 +1194,13 @@ exports.unlinkIfExists = unlinkIfExists;
  * Join root with paths, requiring that the result is located within root
  * @param {string} root
  * @param {Array<string>} paths
- * @return {string|null} root joined with path or null if invalid
+ * @return {string} root joined with path, throws if invalid
  */
 function pathJoinRooted(root, ...paths) {
     const joined = path.join(root, ...paths);
     let relative = path.relative(root, joined);
     if (path.isAbsolute(relative) || relative.startsWith('..')) {
-        return null;
+        throw new Error('path join attempts to escape root');
     }
     return joined;
 }
