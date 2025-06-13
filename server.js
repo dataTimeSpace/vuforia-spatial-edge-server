@@ -1557,8 +1557,8 @@ function objectWebServer() {
 
     if (isStandaloneMobile) {
         const LocalUIApp = require('./libraries/LocalUIApp.js');
-        const uiPath = pathJoinRooted(__dirname, '../vuforia-spatial-toolbox-userinterface');
-        const alternativeUiPath = pathJoinRooted(__dirname, '../userinterface'); // for backwards compatibility
+        const uiPath = path.join(__dirname, '../vuforia-spatial-toolbox-userinterface');
+        const alternativeUiPath = path.join(__dirname, '../userinterface'); // for backwards compatibility
         const selectedUiPath = fs.existsSync(uiPath) ? uiPath : alternativeUiPath;
         console.info('UI path for LocalUIApp: ' + selectedUiPath);
         const localUserInterfaceApp = new LocalUIApp(selectedUiPath, addonFolders);
