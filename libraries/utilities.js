@@ -1102,8 +1102,15 @@ function getVideoDir(objectName) {
 
 exports.getVideoDir = getVideoDir;
 
-// Ensures id is alphanumeric or -_
+/**
+ * Ensures id is alphanumeric or -_ and doesn't attempt prototype pollution
+ * @param {string} id
+ * @return {boolean} whether valid
+ */
 function isValidId(id) {
+    if (id === '__proto__' || id === 'constructor' || id === 'prototype') {
+        return false;
+    }
     return id.match(/^[A-Za-z0-9_ -]+$/);
 }
 
@@ -1182,3 +1189,19 @@ async function unlinkIfExists(filePath) {
     }
 }
 exports.unlinkIfExists = unlinkIfExists;
+
+/**
+ * Join root with paths, requiring that the result is located within root
+ * @param {string} root
+ * @param {Array<string>} paths
+ * @return {string} root joined with path, throws if invalid
+ */
+function pathJoinRooted(root, ...paths) {
+    const joined = path.join(root, ...paths);
+    let relative = path.relative(root, joined);
+    if (path.isAbsolute(relative) || relative.startsWith('..')) {
+        throw new Error('path join attempts to escape root');
+    }
+    return joined;
+}
+exports.pathJoinRooted = pathJoinRooted;

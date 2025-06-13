@@ -227,8 +227,8 @@ router.delete('/:objectName/nodeLock/:nodeName/password/:password/', function (r
  * @todo compress video
  */
 router.post('/:objectName/video/:videoName', function (req, res) {
-    if (!utilities.isValidId(req.params.objectName)) {
-        res.status(400).send('Invalid object name. Must be alphanumeric.');
+    if (!utilities.isValidId(req.params.objectName) || !utilities.isValidId(req.params.videoName)) {
+        res.status(400).send('Invalid object or video name. Must be alphanumeric.');
         return;
     }
     objectController.uploadVideo(req.params.objectName, req.params.videoName, req, function (statusCode, responseContents) {

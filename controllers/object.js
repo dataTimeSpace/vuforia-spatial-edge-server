@@ -2,7 +2,7 @@ const fsProm = require('../persistence/fsProm.js');
 const path = require('path');
 const formidable = require('formidable');
 const utilities = require('../libraries/utilities');
-const {fileExists, unlinkIfExists, mkdirIfNotExists} = utilities;
+const {fileExists, unlinkIfExists, mkdirIfNotExists, pathJoinRooted} = utilities;
 const {startSplatTask, splatTasks} = require('./object/SplatTask.js');
 const { beatPort } = require('../config.js');
 
@@ -146,7 +146,7 @@ async function uploadMediaFile(objectID, req, callback) {
         console.log('form.file triggered');
         // Construct new filepath
         simplifiedFilename = simplifyFilename(file.originalFilename);
-        newFilepath = path.join(form.uploadDir, simplifiedFilename);
+        newFilepath = pathJoinRooted(form.uploadDir, simplifiedFilename);
 
         // Rename the file after it's been saved
         try {
@@ -348,7 +348,8 @@ const setVisualization = function(objectID, vis, callback) {
 // request a zip-file with the object stored inside
 // ****************************************************************************************************************
 const zipBackup = async function(objectId, req, res) {
-    if (!await fileExists(path.join(objectsPath, objectId))) {
+    const objDir = pathJoinRooted(objectsPath, objectId);
+    if (!await fileExists(objDir)) {
         res.status(404).send('object directory for ' + objectId + 'does not exist at ' + objectsPath + '/' + objectId);
         return;
     }
@@ -358,7 +359,7 @@ const zipBackup = async function(objectId, req, res) {
     var archiver = require('archiver');
     var zip = archiver('zip');
     zip.pipe(res);
-    zip.directory(objectsPath + '/' + objectId, objectId + '/');
+    zip.directory(objDir, objectId + '/');
     zip.finalize();
 };
 
@@ -373,7 +374,7 @@ const generateXml = async function(objectID, body, callback) {
         '   </Tracking>\n' +
         '   </ARConfig>';
 
-    let targetDir = path.join(objectsPath, objectName, identityFolderName, 'target');
+    let targetDir = pathJoinRooted(objectsPath, objectName, identityFolderName, 'target');
     await mkdirIfNotExists(targetDir);
 
     var xmlOutFile = path.join(targetDir, 'target.xml');
@@ -447,8 +448,8 @@ const checkFileExists = async (objectId, filePath) => {
         return false;
     }
 
-    let objectIdentityDir = path.join(objectsPath, obj.name, identityFolderName);
-    let absoluteFilePath = path.join(objectIdentityDir, filePath);
+    let objectIdentityDir = pathJoinRooted(objectsPath, obj.name, identityFolderName);
+    let absoluteFilePath = pathJoinRooted(objectIdentityDir, filePath);
     return await fileExists(absoluteFilePath);
 };
 
@@ -497,9 +498,9 @@ const uploadTarget = async (objectName, req, res) => {
     }
 
     // first upload to a temporary directory (tmp/) before moving it to the target directory (target/)
-    let uploadDir = path.join(objectsPath, objectName, identityFolderName, 'tmp');
+    let uploadDir = pathJoinRooted(objectsPath, objectName, identityFolderName, 'tmp');
     await mkdirIfNotExists(uploadDir);
-    let targetDir = path.join(objectsPath, objectName,  identityFolderName, 'target');
+    let targetDir = pathJoinRooted(objectsPath, objectName,  identityFolderName, 'target');
     await mkdirIfNotExists(targetDir);
 
     let form = new formidable.IncomingForm({
@@ -523,7 +524,7 @@ const uploadTarget = async (objectName, req, res) => {
             name: file.name,
             completed: false
         });
-        file.path = path.join(form.uploadDir, file.name);
+        file.path = pathJoinRooted(form.uploadDir, file.name);
     });
 
     form.parse(req);
@@ -548,8 +549,9 @@ const uploadTarget = async (objectName, req, res) => {
     function makeFileProcessPromise(fileInfo) {
         return new Promise((resolve, reject) => {
             (async () => {
-                if (!await fileExists(path.join(form.uploadDir, fileInfo.name))) { // Ignore files that haven't finished uploading
-                    reject(`File doesn't exist at ${path.join(form.uploadDir, fileInfo.name)}`);
+                const formDir = pathJoinRooted(form.uploadDir, fileInfo.name);
+                if (!await fileExists(formDir)) { // Ignore files that haven't finished uploading
+                    reject(`File doesn't exist at ${formDir}`);
                     return;
                 }
                 fileInfo.completed = true; // File has downloaded
@@ -563,8 +565,8 @@ const uploadTarget = async (objectName, req, res) => {
                     return;
                 }
 
-                let originalFilepath = path.join(uploadDir, fileInfo.name);
-                let newFilepath = path.join(targetDir, `target.${fileExtension}`);
+                let originalFilepath = pathJoinRooted(uploadDir, fileInfo.name);
+                let newFilepath = pathJoinRooted(targetDir, `target.${fileExtension}`);
 
                 try {
                     await fsProm.rename(originalFilepath, newFilepath);

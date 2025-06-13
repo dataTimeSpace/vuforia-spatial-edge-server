@@ -1,7 +1,7 @@
 const fsProm = require('../persistence/fsProm.js');
 const formidable = require('formidable');
 const utilities = require('../libraries/utilities');
-const {mkdirIfNotExists, unlinkIfExists} = utilities;
+const {mkdirIfNotExists, unlinkIfExists, pathJoinRooted} = utilities;
 const EdgeBlock = require('../models/EdgeBlock');
 
 // Variables populated from server.js with setup()
@@ -172,7 +172,7 @@ function uploadIconImage(objectID, frameID, nodeID, req, callback) {
             return;
         }
 
-        var iconDir = objectsPath + '/' + object.name + '/' + identityFolderName + '/logicNodeIcons';
+        const iconDir = pathJoinRooted(objectsPath, object.name, identityFolderName, 'logicNodeIcons');
 
         await mkdirIfNotExists(iconDir);
 
@@ -187,7 +187,7 @@ function uploadIconImage(objectID, frameID, nodeID, req, callback) {
             return;
         });
 
-        var rawFilepath = form.uploadDir + '/' + nodeID + '_fullSize.jpg';
+        var rawFilepath = pathJoinRooted(form.uploadDir, nodeID + '_fullSize.jpg');
 
         await unlinkIfExists(rawFilepath);
 
@@ -200,7 +200,7 @@ function uploadIconImage(objectID, frameID, nodeID, req, callback) {
                 console.warn('logicNode form error', err);
             }
 
-            var resizedFilepath = form.uploadDir + '/' + nodeID + '.jpg';
+            var resizedFilepath = pathJoinRooted(form.uploadDir, nodeID + '.jpg');
 
             await unlinkIfExists(resizedFilepath);
 
