@@ -675,7 +675,7 @@ async function loadObjects() {
 
             // try to read a saved previous state of the object
             try {
-                const objectJsonText = await fsProm.readFile(objectsPath + '/' + objectFolderList[i] + '/' + identityFolderName + '/object.json', 'utf8');
+                const objectJsonText = await fsProm.readFile(pathJoinRooted(objectsPath, objectFolderList[i], identityFolderName, 'object.json'), 'utf8');
                 objects[tempFolderName] = JSON.parse(objectJsonText);
                 const obj = objects[tempFolderName];
                 obj.ip = services.ip; // ip.address();
@@ -917,9 +917,10 @@ async function setAnchors() {
         // TODO: world objects are now considered initialized by default... update how anchor objects work (do they still require that the world has target data?)
         if (objects[key].isWorldObject || objects[key].type === 'world') {
             // check if the object is correctly initialized with tracking targets
-            let datExists = await fileExists(pathJoinRooted(objectsPath, objects[key].name, identityFolderName, '/target/target.dat'));
-            let xmlExists = await fileExists(pathJoinRooted(objectsPath, objects[key].name, identityFolderName, '/target/target.xml'));
-            let jpgExists = await fileExists(pathJoinRooted(objectsPath, objects[key].name, identityFolderName, '/target/target.jpg'));
+            const targetDir = pathJoinRooted(objectsPath, objects[key].name, identityFolderName, 'target');
+            let datExists = await fileExists(pathJoinRooted(targetDir, 'target.dat'));
+            let xmlExists = await fileExists(pathJoinRooted(targetDir, 'target.xml'));
+            let jpgExists = await fileExists(pathJoinRooted(targetDir, 'target.jpg'));
 
             if ((xmlExists && datExists && jpgExists) || (xmlExists && jpgExists)) {
                 hasValidWorldObject = true;
@@ -941,10 +942,11 @@ async function setAnchors() {
             continue;
         }
 
+        const targetDir = pathJoinRooted(objectsPath, objects[key].name, identityFolderName, 'target');
         // check if the object is correctly initialized with tracking targets
-        let datExists = await fileExists(pathJoinRooted(objectsPath, objects[key].name, identityFolderName, '/target/target.dat'));
-        let xmlExists = await fileExists(pathJoinRooted(objectsPath, objects[key].name, identityFolderName, '/target/target.xml'));
-        let jpgExists = await fileExists(pathJoinRooted(objectsPath, objects[key].name, identityFolderName, '/target/target.jpg'));
+        let datExists = await fileExists(pathJoinRooted(targetDir, 'target.dat'));
+        let xmlExists = await fileExists(pathJoinRooted(targetDir, 'target.xml'));
+        let jpgExists = await fileExists(pathJoinRooted(targetDir, 'target.jpg'));
 
         if (xmlExists && (datExists || jpgExists)) {
             continue;
@@ -1637,7 +1639,7 @@ function objectWebServer() {
     webServer.use('/logicNodeIcon', async function (req, res) {
         var urlArray = req.originalUrl.split('/');
         var objectName = urlArray[2];
-        var fileName = objectsPath + '/' + objectName + '/' + identityFolderName + '/logicNodeIcons/' + urlArray[3];
+        var fileName = pathJoinRooted(objectsPath, objectName, identityFolderName, 'logicNodeIcons', urlArray[3]);
         if (!await fileExists(fileName)) {
             res.sendFile(__dirname + '/libraries/emptyLogicIcon.png'); // default to blank image if not custom saved yet
             return;
@@ -1655,7 +1657,7 @@ function objectWebServer() {
         }
 
         var objectName = getObject(objectId).name;
-        var fileName = objectsPath + '/' + objectName + '/' + identityFolderName + '/mediaFiles/' + urlArray[3];
+        var fileName = pathJoinRooted(objectsPath, objectName, identityFolderName, 'mediaFiles', urlArray[3]);
         if (!await fileExists(fileName)) {
             res.sendFile(__dirname + '/libraries/emptyLogicIcon.png'); // default to blank image if not found
             return;
@@ -1678,7 +1680,7 @@ function objectWebServer() {
             if (thisFrame !== null) {
                 if (thisFrame.hasOwnProperty('tool')) {
                     if (thisFrame.tool.hasOwnProperty('addon') && thisFrame.tool.hasOwnProperty('interface') && thisFrame.tool.hasOwnProperty('tool')) {
-                        toolpath = __dirname + '/addons/' + thisFrame.tool.addon + '/interfaces/' + thisFrame.tool.interface + '/tools/' + thisFrame.tool.tool;
+                        toolpath = pathJoinRooted(__dirname, 'addons', thisFrame.tool.addon, 'interfaces', thisFrame.tool.interface, 'tools', thisFrame.tool.tool);
                     }
                 }
             }
@@ -2016,7 +2018,7 @@ function objectWebServer() {
                 res.status(400).send('Invalid object or frame name. Must be alphanumeric.');
                 return;
             }
-            var objectPath = objectsPath + '/' + req.params.objectName + '/' + req.params.frameName;
+            var objectPath = pathJoinRooted(objectsPath, req.params.objectName, req.params.frameName);
             var tree = dirTree(objectPath, {exclude: /\.DS_Store/}, function (item) {
                 item.path = item.path.replace(objectsPath, '/obj');
             });
@@ -2042,7 +2044,7 @@ function objectWebServer() {
                 return;
             }
             try {
-                await fsProm.writeFile(__dirname + '/' + req.path.replace('edit', 'objects'), req.body.content);
+                await fsProm.writeFile(pathJoinRooted(__dirname, req.path.replace('edit', 'objects')), req.body.content);
             } catch (err) {
                 // TODO: update path with objectsPath
                 console.error('unable to PUT edit', err);
@@ -2066,7 +2068,7 @@ function objectWebServer() {
                 res.status(400).send('Invalid object or frame name. Must be alphanumeric.');
                 return;
             }
-            res.sendFile(__dirname + '/' + req.params.objectName + '/' + req.params.frameName);
+            res.sendFile(pathJoinRooted(__dirname, req.params.objectName, req.params.frameName));
         });
 
         // Send the main starting page for the web user interface
@@ -2375,7 +2377,7 @@ function objectWebServer() {
                     return;
                 }
 
-                const folderDel = objectsPath + '/' + req.body.name;
+                const folderDel = pathJoinRooted(objectsPath, req.body.name);
                 try {
                     const folderStats = await fsProm.stat(folderDel);
 
@@ -2585,7 +2587,7 @@ function objectWebServer() {
                         return;
                     }
 
-                    var folderDelFrame = objectsPath + '/' + req.body.name + '/' + frameName;
+                    var folderDelFrame = pathJoinRooted(objectsPath, req.body.name, frameName);
 
                     await rmdirIfExists(folderDelFrame);
 
@@ -2610,7 +2612,7 @@ function objectWebServer() {
 
                 } else {
 
-                    const folderDel = objectsPath + '/' + req.body.name;
+                    const folderDel = pathJoinRooted(objectsPath, req.body.name);
                     await rmdirIfExists(folderDel);
 
                     var tempFolderName2 = utilities.readObject(objectLookup, req.body.name);
@@ -2670,7 +2672,7 @@ function objectWebServer() {
                     }
                     filename = file.name;
                     //rename the incoming file to the file's name
-                    file.path = form.uploadDir + '/' + file.name;
+                    file.path = pathJoinRooted(form.uploadDir, file.name);
                 });
 
                 form.parse(req);
@@ -2690,7 +2692,7 @@ function objectWebServer() {
 
                                 //todo add object to the beatsender.
 
-                                await fsProm.unlink(folderD + '/' + filename);
+                                await fsProm.unlink(pathJoinRooted(folderD, filename));
 
                                 res.status(200);
                                 res.send('done');
@@ -2733,7 +2735,7 @@ function objectWebServer() {
                         return;
                     }
 
-                    var folderDel = objectsPath + '/' + req.body.name;
+                    var folderDel = pathJoinRooted(objectsPath, req.body.name);
 
                     if (await fileExists(folderDel)) {
                         try {
@@ -2768,7 +2770,7 @@ function objectWebServer() {
                 }
 
                 var form = new formidable.IncomingForm({
-                    uploadDir: objectsPath + '/' + req.params.id,  // don't forget the __dirname here
+                    uploadDir: pathJoinRooted(objectsPath, req.params.id),
                     keepExtensions: true,
                     maxFieldsSize: 1024 * 1024 * 1024, // 1 GB
                     maxFileSize: 1024 * 1024 * 1024,
@@ -2787,12 +2789,12 @@ function objectWebServer() {
                     fileInfoList.push({name: file.name, completed: false});
                     //rename the incoming file to the file's name
                     if (req.headers.type === 'targetUpload') {
-                        file.path = form.uploadDir + '/' + file.name;
+                        file.path = pathJoinRooted(form.uploadDir, file.name);
                     } else if (req.headers.type === 'fileUpload') {
                         if (typeof req.headers.folder !== 'undefined') {
-                            file.path = form.uploadDir + '/' + req.headers.frame + '/' + req.headers.folder + '/' + file.name;
+                            file.path = pathJoinRooted(form.uploadDir, req.headers.frame, req.headers.folder, file.name);
                         } else {
-                            file.path = form.uploadDir + '/' + req.headers.frame + '/' + file.name;
+                            file.path = pathJoinRooted(form.uploadDir, req.headers.frame, file.name);
                         }
                     }
                 });
@@ -2826,9 +2828,10 @@ function objectWebServer() {
 
                             if (fileExtension === 'jpg' || fileExtension === 'dat' || fileExtension === 'xml' ||
                                 fileExtension === 'glb' || fileExtension === '3dt'  || fileExtension === 'splat') {
-                                if (!await fileExists(folderD + '/' + identityFolderName + '/target/')) {
+                                const targetDir = pathJoinRooted(folderD, identityFolderName, 'target');
+                                if (!await fileExists(targetDir)) {
                                     try {
-                                        await fsProm.mkdir(folderD + '/' + identityFolderName + '/target/', '0766');
+                                        await fsProm.mkdir(targetDir, '0766');
                                     } catch (err) {
                                         console.error('Error creating target upload directory', err);
                                         res.send('ERROR! Can\'t make the directory! \n');    // echo the result back
@@ -2836,7 +2839,7 @@ function objectWebServer() {
                                 }
 
                                 try {
-                                    await fsProm.rename(folderD + '/' + filename, folderD + '/' + identityFolderName + '/target/target.' + fileExtension);
+                                    await fsProm.rename(pathJoinRooted(folderD, filename), pathJoinRooted(targetDir, 'target.' + fileExtension));
                                 } catch (e) {
                                     console.error(`error renaming ${filename} to target.${fileExtension}`, e);
                                 }
@@ -2855,9 +2858,9 @@ function objectWebServer() {
                                     // but we scale down to 1024px for a larger margin of error and (even) smaller filesize
                                 } else if (fileExtension === 'jpg') {
 
-                                    var rawFilepath = folderD + '/' + identityFolderName + '/target/target.' + fileExtension;
-                                    var tempFilepath = folderD + '/' + identityFolderName + '/target/target-temp.' + fileExtension;
-                                    var originalFilepath = folderD + '/' + identityFolderName + '/target/target-original-size.' + fileExtension;
+                                    var rawFilepath = pathJoinRooted(targetDir, 'target.' + fileExtension);
+                                    var tempFilepath = pathJoinRooted(targetDir, 'target-temp.' + fileExtension);
+                                    var originalFilepath = pathJoinRooted(targetDir, 'target-original-size.' + fileExtension);
 
                                     try {
                                         const image = await Jimp.read(rawFilepath);
@@ -2912,7 +2915,7 @@ function objectWebServer() {
                                        '   </ARConfig>';
 
 
-                                    var xmlOutFile = pathJoinRooted(folderD, identityFolderName, '/target/target.xml');
+                                    var xmlOutFile = pathJoinRooted(folderD, identityFolderName, 'target', 'target.xml');
                                     if (!await fileExists(xmlOutFile)) {
                                         try {
                                             await fsProm.writeFile(xmlOutFile, documentcreate);
@@ -2942,12 +2945,12 @@ function objectWebServer() {
                                         }
                                     }
 
-                                    let jpgPath = pathJoinRooted(folderD, identityFolderName, '/target/target.jpg');
-                                    let datPath = pathJoinRooted(folderD, identityFolderName, '/target/target.dat');
-                                    let xmlPath = pathJoinRooted(folderD, identityFolderName, '/target/target.xml');
-                                    let glbPath = pathJoinRooted(folderD, identityFolderName, '/target/target.glb');
-                                    let tdtPath = pathJoinRooted(folderD, identityFolderName, '/target/target.3dt');
-                                    let splatPath = pathJoinRooted(folderD, identityFolderName, '/target/target.splat');
+                                    let jpgPath = pathJoinRooted(folderD, identityFolderName, 'target', 'target.jpg');
+                                    let datPath = pathJoinRooted(folderD, identityFolderName, 'target', 'target.dat');
+                                    let xmlPath = pathJoinRooted(folderD, identityFolderName, 'target', 'target.xml');
+                                    let glbPath = pathJoinRooted(folderD, identityFolderName, 'target', 'target.glb');
+                                    let tdtPath = pathJoinRooted(folderD, identityFolderName, 'target', 'target.3dt');
+                                    let splatPath = pathJoinRooted(folderD, identityFolderName, 'target', 'target.splat');
 
                                     var fileList = [jpgPath, xmlPath, datPath, glbPath, tdtPath, splatPath];
 
@@ -3037,7 +3040,7 @@ function objectWebServer() {
                                                 anyTargetsUploaded = true;
                                             }
                                             if (folderFile === 'target') {
-                                                const innerFolderFiles = await fsProm.readdir(folderD + '/' + identityFolderName + '/target/' + folderFile);
+                                                const innerFolderFiles = await fsProm.readdir(pathJoinRooted(folderD, identityFolderName, 'target', folderFile));
                                                 let deferred = false;
                                                 function finishFn(folderName) {
                                                     return async function() {
@@ -3270,9 +3273,7 @@ function objectWebServer() {
  * @param {string} folderVar
  */
 async function createObjectFromTarget(folderVar) {
-    var folder = objectsPath + '/' + folderVar + '/';
-
-    if (!await fileExists(folder)) {
+    if (!await fileExists(pathJoinRooted(objectsPath, folderVar))) {
         return;
     }
 
