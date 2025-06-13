@@ -7,7 +7,7 @@ const {objectsPath} = require('../../config.js');
 const {identityFolderName} = require('../../constants.js');
 const fsProm = require('../../persistence/fsProm.js');
 const utilities = require('../../libraries/utilities.js');
-const {fileExists} = utilities;
+const {fileExists, pathJoinRooted} = utilities;
 
 const SPLAT_HOST = 'change me:3000';
 
@@ -43,7 +43,7 @@ class SplatTask {
      */
     async start() {
         const objectName = this.object.name;
-        const splatPath = path.join(objectsPath, objectName, identityFolderName, 'target', 'target.splat');
+        const splatPath = pathJoinRooted(objectsPath, objectName, identityFolderName, 'target', 'target.splat');
         if (await fileExists(splatPath)) {
             this.done = true;
             return;
@@ -56,7 +56,7 @@ class SplatTask {
             }
             // Continue, download failed because the request is still in progress
         } else {
-            const tdtPath = path.join(objectsPath, objectName, identityFolderName, 'target', 'target.3dt');
+            const tdtPath = pathJoinRooted(objectsPath, objectName, identityFolderName, 'target', 'target.3dt');
             if (!await fileExists(tdtPath)) {
                 throw new Error('No 3dt file to upload');
             }
@@ -156,7 +156,7 @@ class SplatTask {
     }
 
     async download() {
-        const splatPath = path.join(objectsPath, this.object.name, identityFolderName, 'target', 'target.splat');
+        const splatPath = pathJoinRooted(objectsPath, this.object.name, identityFolderName, 'target', 'target.splat');
         try {
             let res = await fetch(`https://${SPLAT_HOST}/downloads/${this.gaussianSplatRequestId}`);
             if (!res.ok) {
