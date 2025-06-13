@@ -63,7 +63,9 @@ class LocalUIApp {
             }
             res.status(403).send('access prohibited to non-script non-style file');
         });
-        this.app.get('/proxy/*', proxyRequestHandler);
+        if (process.env.NODE_ENV === 'development') {
+            this.app.get('/proxy/*', proxyRequestHandler);
+        }
         if (this.userinterfacePath && fs.existsSync(this.userinterfacePath)) {
             this.app.use(express.static(this.userinterfacePath));
         } else {
