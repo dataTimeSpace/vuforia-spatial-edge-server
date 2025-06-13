@@ -6,7 +6,7 @@ const stream = require('stream');
 const zlib = require('zlib');
 
 const recorder = require('../libraries/recorder.js');
-const {fileExists} = require('../libraries/utilities.js');
+const {fileExists, pathJoinRooted} = require('../libraries/utilities.js');
 
 const router = express.Router();
 
@@ -69,13 +69,13 @@ function pipeReadStream(req, res, readStream) {
 }
 
 router.get('/logs/:logPath', async function(req, res) {
-    let logPath = path.join(recorder.logsPath, req.params.logPath);
+    let logPath = pathJoinRooted(recorder.logsPath, req.params.logPath);
     if (logPath.endsWith('.gz')) {
         res.sendFile(logPath);
         return;
     }
 
-    let compressedLogPath = path.join(recorder.logsPath, req.params.logPath + '.gz');
+    let compressedLogPath = pathJoinRooted(recorder.logsPath, req.params.logPath + '.gz');
     if (!await fileExists(compressedLogPath)) { // catch needed because stat throws an error if the file does not exist
         // Compare only the start `objects_${startTime}` bit of the current log
         // name since the end time is constantly changing
