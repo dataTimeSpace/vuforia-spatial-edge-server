@@ -1756,16 +1756,19 @@ function objectWebServer() {
         // TODO: ben - may need to update objectsPath if the object is a world object
 
         if ((req.method === 'GET') && (req.url.slice(-1) === '/' || urlArray[urlArray.length - 1].match(/\.html?$/))) {
-            let fileName = objectsPath + newUrl;
-            let fileName2 = toolpath + newToolUrl;
+            let fileName = pathJoinRooted(objectsPath, newUrl);
+            let fileName2 = pathJoinRooted(toolpath, newToolUrl);
 
             if (toolpath && switchToInteraceTool && fs.existsSync(fileName2)) fileName = fileName2;
 
             if (urlArray[urlArray.length - 1] !== 'index.html' && urlArray[urlArray.length - 1] !== 'index.htm') {
-                if (fs.existsSync(fileName + 'index.html')) {
-                    fileName = fileName + 'index.html';
-                } else if (fs.existsSync(fileName + 'index.htm')) {
-                    fileName = fileName + 'index.htm';
+                let indexPath = pathJoinRooted(fileName, 'index.html');
+                if (fs.existsSync(indexPath)) {
+                    fileName = indexPath;
+                }
+                indexPath = pathJoinRooted(fileName, 'index.htm');
+                if (fs.existsSync(indexPath)) {
+                    fileName = indexPath;
                 }
             }
 
@@ -1808,8 +1811,7 @@ function objectWebServer() {
             loadedHtml('head').prepend(scriptNode);
             res.send(loadedHtml.html());
         } else if ((req.method === 'GET') && (req.url.slice(-1) === '/' || urlArray[urlArray.length - 1].match(/\.json?$/))) {
-
-            let fileName = objectsPath + req.url + identityFolderName + '/object.json';
+            let fileName = pathJoinRooted(objectsPath, req.url, identityFolderName, 'object.json');
 
             if (!fs.existsSync(fileName)) {
                 res.send(404);
@@ -1828,7 +1830,7 @@ function objectWebServer() {
             res.json(json);
         } else {
 
-            let fileName2 = toolpath + newToolUrl;
+            let fileName2 = pathJoinRooted(toolpath, newToolUrl);
             if (toolpath && switchToInteraceTool && fs.existsSync(fileName2)) {
                 res.sendFile(newToolUrl, {root: toolpath});
             } else {
@@ -2347,7 +2349,7 @@ function objectWebServer() {
                     res.status(400).send('Invalid path. Cannot contain \'..\'.');
                     return;
                 }
-                const folderDel = __dirname + req.path.substr(4);
+                const folderDel = pathJoinRooted(__dirname, req.path.substr(4));
                 try {
                     const folderStats = await fsProm.stat(folderDel);
                     if (folderStats.isDirectory()) {
@@ -2576,14 +2578,14 @@ function objectWebServer() {
                         res.status(400).send('Invalid path. Cannot contain \'..\'.');
                         return;
                     }
-                    await fsProm.unlink(objectsPath + pathKey.substring(4));
+                    await fsProm.unlink(pathJoinRooted(objectsPath, pathKey.substring(4)));
                     res.send('ok');
                     return;
                 }
 
                 if (frameName !== '') {
-                    if (!utilities.isValidId(frameName)) {
-                        res.status(400).send('Invalid frame name. Must be alphanumeric.');
+                    if (!utilities.isValidId(frameName) || utilities.goesUpDirectory(req.body.name)) {
+                        res.status(400).send('Invalid object or frame name. Must be alphanumeric.');
                         return;
                     }
 
@@ -3273,7 +3275,8 @@ function objectWebServer() {
  * @param {string} folderVar
  */
 async function createObjectFromTarget(folderVar) {
-    if (!await fileExists(pathJoinRooted(objectsPath, folderVar))) {
+    const objFolder = pathJoinRooted(objectsPath, folderVar);
+    if (!await fileExists(objFolder)) {
         return;
     }
 
@@ -3289,7 +3292,7 @@ async function createObjectFromTarget(folderVar) {
     objects[objectId].targetSize = objectSizeXML;
 
     try {
-        const contents = await fsProm.readFile(objectsPath + '/' + folderVar + '/' + identityFolderName + '/object.json', 'utf8');
+        const contents = await fsProm.readFile(pathJoinRooted(objFolder, identityFolderName, 'object.json'), 'utf8');
         objects[objectId] = JSON.parse(contents);
         // objects[objectId].objectId = objectId;
         objects[objectId].ip = services.ip; //ip.address();

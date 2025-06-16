@@ -100,24 +100,25 @@ function readObject(objectLookup, folder) {
 exports.readObject = readObject;
 
 exports.createFolder = async function createFolder(folderVar) {
-    var identity = objectsPath + '/' + folderVar + '/' + identityFolderName + '/';
+    var identity = pathJoinRooted(objectsPath, folderVar, identityFolderName);
     await mkdirIfNotExists(identity, {recursive: true, mode: '0766'});
 };
 
 
 exports.createFrameFolder = async function (folderVar, frameVar, dirnameO, location) {
     if (location === 'global') return;
-    var folder = objectsPath + '/' + folderVar + '/';
-    // var identity = folder + identityFolderName + '/';
+    var folder = pathJoinRooted(objectsPath, folderVar);
     // being outside of .identity matches frameFolder route for example
-    var firstFrame = folder + frameVar + '/';
+    var firstFrame = pathJoinRooted(folder, frameVar);
 
     if (!await fileExists(firstFrame)) {
         await mkdirIfNotExists(firstFrame, {recursive: true, mode: '0766'});
 
         try {
-            fs.createReadStream(dirnameO + '/libraries/objectDefaultFiles/index.html').pipe(fs.createWriteStream(objectsPath + '/' + folderVar + '/' + frameVar + '/index.html'));
-            fs.createReadStream(dirnameO + '/libraries/objectDefaultFiles/bird.png').pipe(fs.createWriteStream(objectsPath + '/' + folderVar + '/' + frameVar + '/bird.png'));
+            const libraryObjectDefaultFilesIndex = pathJoinRooted(dirnameO, 'libraries/objectDefaultFiles/index.html');
+            const libraryObjectDefaultFilesBird = pathJoinRooted(dirnameO, 'libraries/objectDefaultFiles/bird.png');
+            fs.createReadStream(libraryObjectDefaultFilesIndex).pipe(fs.createWriteStream(pathJoinRooted(firstFrame, 'index.html')));
+            fs.createReadStream(libraryObjectDefaultFilesBird).pipe(fs.createWriteStream(pathJoinRooted(firstFrame, 'bird.png')));
         } catch (e) {
             console.error('Could not copy source files', e);
         }
@@ -147,7 +148,7 @@ exports.rmdirIfExists = rmdirIfExists;
  * @param frameKey
  */
 exports.deleteFrameFolder = async function (objectName, frameName) {
-    var folderPath = objectsPath + '/' + objectName + '/' + frameName;
+    var folderPath = pathJoinRooted(objectsPath, objectName, frameName);
 
     var acceptableFrameNames = ['gauge', 'decimal', 'graph', 'light']; // TODO: remove this restriction
     var isDeletableFrame = false;
@@ -188,7 +189,7 @@ async function getObjectIdFromObjectFile(folderName) {
         return 'allTargetsPlaceholder000000000000';
     }
 
-    let jsonFile = objectsPath + '/' + folderName + '/' + identityFolderName + '/object.json';
+    let jsonFile = pathJoinRooted(objectsPath, folderName, identityFolderName,  'object.json');
 
     if (await fileExists(jsonFile)) {
         try {
@@ -212,7 +213,7 @@ async function getAnchorIdFromObjectFile(folderName) {
         return 'allTargetsPlaceholder000000000000';
     }
 
-    var jsonFile = objectsPath + '/' + folderName + '/object.json';
+    var jsonFile = pathJoinRooted(objectsPath, folderName, 'object.json');
 
     if (await fileExists(jsonFile)) {
         try {
@@ -332,7 +333,7 @@ exports.getTargetSizeFromTarget = async function getTargetSizeFromTarget(folderN
         return 'allTargetsPlaceholder000000000000';
     }
 
-    var xmlFile = objectsPath + '/' + folderName + '/' + identityFolderName + '/target/target.xml';
+    var xmlFile = pathJoinRooted(objectsPath, folderName, identityFolderName, 'target/target.xml');
 
     var resultXML = {
         width: 0.3, // default width and height so it doesn't crash if there isn't a size in the xml
@@ -429,7 +430,7 @@ async function executeWrite(objects) {
     }
 
     // prepare to write
-    var outputFilename = objectsPathBuffered + '/' + objects[obj].name + '/' + identityFolderName + '/object.json';
+    var outputFilename = pathJoinRooted(objectsPathBuffered, objects[obj].name, identityFolderName, 'object.json');
     var objectData = objects[obj];
     // write file
     try {
@@ -613,7 +614,7 @@ exports.updateObject = async function updateObject(objectName, objects) {
 
         // try to read a saved previous state of the object
         try {
-            objects[tempFolderName] = JSON.parse(await fsProm.readFile(objectsPath + '/' + objectFolder + '/' + identityFolderName + '/object.json', 'utf8'));
+            objects[tempFolderName] = JSON.parse(await fsProm.readFile(pathJoinRooted(objectsPath, objectFolder, identityFolderName, 'object.json'), 'utf8'));
             objects[tempFolderName].ip = ip.address();
 
             // this is for transforming old lists to new lists
@@ -690,7 +691,7 @@ exports.deleteObject = async function deleteObject(objectName, objects, objectLo
 };
 
 exports.loadHardwareInterface = function loadHardwareInterface(hardwareInterfaceName) {
-    var hardwareFolder = hardwareIdentity + '/' + hardwareInterfaceName + '/';
+    const hardwareFolder = pathJoinRooted(hardwareIdentity, hardwareInterfaceName);
 
     if (!fs.existsSync(hardwareIdentity)) {
         fs.mkdirSync(hardwareIdentity, '0766', function (err) {
@@ -708,8 +709,9 @@ exports.loadHardwareInterface = function loadHardwareInterface(hardwareInterface
         });
     }
 
-    if (!fs.existsSync(hardwareFolder + 'settings.json')) {
-        fs.writeFile(hardwareFolder + 'settings.json', '', function (err) {
+    const settingsPath = pathJoinRooted(hardwareFolder, 'settings.json');
+    if (!fs.existsSync(settingsPath)) {
+        fs.writeFile(settingsPath, '', function (err) {
             if (err) {
                 console.error('Error writing file', err);
             }
@@ -717,7 +719,7 @@ exports.loadHardwareInterface = function loadHardwareInterface(hardwareInterface
     }
 
     try {
-        var fileContents = fs.readFileSync(hardwareFolder + 'settings.json', 'utf8');
+        var fileContents = fs.readFileSync(settingsPath, 'utf8');
         hardwareInterfaces[hardwareInterfaceName] = JSON.parse(fileContents);
     } catch (e) {
         console.error('Could not load settings.json for: ' + hardwareInterfaceName, e);
@@ -740,20 +742,21 @@ exports.loadHardwareInterface = function loadHardwareInterface(hardwareInterface
 };
 
 exports.loadHardwareInterfaceAsync = async function loadHardwareInterfaceAsync(hardwareInterfaceName) {
-    var hardwareFolder = hardwareIdentity + '/' + hardwareInterfaceName + '/';
+    const hardwareFolder = pathJoinRooted(hardwareIdentity, hardwareInterfaceName);
 
     mkdirIfNotExists(hardwareFolder, {recursive: true, mode: '0766'});
 
-    if (!await fileExists(hardwareFolder + 'settings.json')) {
+    const settingsPath = pathJoinRooted(hardwareFolder, 'settings.json');
+    if (!await fileExists(settingsPath)) {
         try {
-            await fsProm.writeFile(hardwareFolder + 'settings.json', '{}');
+            await fsProm.writeFile(settingsPath, '{}');
         } catch (err) {
             console.error('Error writing file', err);
         }
     }
 
     try {
-        const fileContents = await fsProm.readFile(hardwareFolder + 'settings.json', 'utf8');
+        const fileContents = await fsProm.readFile(settingsPath, 'utf8');
         hardwareInterfaces[hardwareInterfaceName] = JSON.parse(fileContents);
     } catch (e) {
         console.error('Could not load settings.json for: ' + hardwareInterfaceName, e);
