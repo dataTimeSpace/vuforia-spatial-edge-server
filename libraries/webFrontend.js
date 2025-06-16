@@ -655,7 +655,9 @@ exports.uploadTargetContent = function (parm, objectsPath, objectInterfaceName) 
     if (debug) console.log('interface content');
     var text = '';
 
-    var objectPath2 = pathJoinRooted(objectPath2, parm);
+    const objectPath2 = pathJoinRooted(objectsPath, parm);
+
+    const targetPath = pathJoinRooted(objectsPath, parm, identityFolderName, 'target');
 
     var listeliste = walk(objectPath2);
 
@@ -802,9 +804,12 @@ exports.uploadTargetContent = function (parm, objectsPath, objectInterfaceName) 
         '          </div>' +
         '        </span>' +
         '        <span class="btn ';
-    if (debug)console.log(objectsPath + parm + '/' + identityFolderName + '/target/target.dat');
-    if (fs.existsSync(objectsPath + parm + '/index.htm') || fs.existsSync(objectsPath + '/' + parm + '/index.html')) {
-        if (fs.existsSync(objectsPath + parm + '/' + identityFolderName + '/target/target.dat') && fs.existsSync(objectsPath + '/' + parm + '/' + identityFolderName + '/target/target.xml') && fs.existsSync(objectsPath + '/' + parm + '/' + identityFolderName + '/target/target.jpg')) {
+    if (debug) console.log(targetPath);
+    if (fs.existsSync(pathJoinRooted(objectPath2, 'index.htm')) ||
+        fs.existsSync(pathJoinRooted(objectPath2, 'index.html'))) {
+        if (fs.existsSync(pathJoinRooted(targetPath, 'target.dat')) &&
+            fs.existsSync(pathJoinRooted(targetPath, 'target.xml')) &&
+            fs.existsSync(pathJoinRooted(targetPath, 'target.jpg'))) {
             text += 'btn-success';
         } else {
             text += 'btn-warning';
@@ -892,6 +897,9 @@ exports.uploadTargetContentFrame = function (parm, frame, objectsPath, objectInt
     var framePath = pathJoinRooted(objectsPath, parm);
 
     var framePath2 = pathJoinRooted(framePath, frame);
+
+    const frameFilePath = pathJoinRooted(framePath, parm);
+    const frameTargetPath = pathJoinRooted(frameFilePath, identityFolderName, 'target');
 
     var listeliste = walk(framePath2);
 
@@ -1037,9 +1045,11 @@ exports.uploadTargetContentFrame = function (parm, frame, objectsPath, objectInt
         '          </div>' +
         '        </span>' +
         '        <span class="btn ';
-    if (debug)console.log(framePath + parm + '/' + identityFolderName + '/target/target.dat');
-    if (fs.existsSync(framePath + parm + '/index.htm') || fs.existsSync(framePath + '/' + parm + '/index.html')) {
-        if (fs.existsSync(framePath + parm + '/' + identityFolderName + '/target/target.dat') && fs.existsSync(framePath + '/' + parm + '/' + identityFolderName + '/target/target.xml') && fs.existsSync(framePath + '/' + parm + '/' + identityFolderName + '/target/target.jpg')) {
+    if (debug) console.log(frameTargetPath);
+    if (fs.existsSync(pathJoinRooted(frameFilePath, 'index.html')) || fs.existsSync(pathJoinRooted(frameFilePath, 'index.htm'))) {
+        if (fs.existsSync(pathJoinRooted(frameTargetPath, 'target.dat')) &&
+            fs.existsSync(pathJoinRooted(frameTargetPath, 'target.xml')) &&
+            fs.existsSync(pathJoinRooted(frameTargetPath, 'target.jpg'))) {
             text += 'btn-success';
         } else {
             text += 'btn-warning';

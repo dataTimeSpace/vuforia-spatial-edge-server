@@ -74,7 +74,7 @@ const uploadVideo = async function(objectID, videoID, reqForForm, callback) {
             callback(500, err);
         });
 
-        var rawFilepath = form.uploadDir + '/' + videoID + '.mp4';
+        var rawFilepath = pathJoinRooted(form.uploadDir, videoID + '.mp4');
 
         await unlinkIfExists(rawFilepath);
 
@@ -124,7 +124,7 @@ async function uploadMediaFile(objectID, req, callback) {
         return;
     }
 
-    let mediaDir = objectsPath + '/' + object.name + '/' + identityFolderName + '/mediaFiles';
+    const mediaDir = pathJoinRooted(objectsPath, object.name, identityFolderName, 'mediaFiles');
     await mkdirIfNotExists(mediaDir);
 
     let form = new formidable.IncomingForm({
@@ -269,7 +269,7 @@ const memoryUpload = async function(objectID, req, callback) {
         return;
     }
 
-    var memoryDir = objectsPath + '/' + obj.name + '/' + identityFolderName + '/memory/';
+    const memoryDir = pathJoinRooted(objectsPath, obj.name, identityFolderName, 'memory');
     await mkdirIfNotExists(memoryDir);
 
     var form = new formidable.IncomingForm({
@@ -285,9 +285,9 @@ const memoryUpload = async function(objectID, req, callback) {
 
     form.on('fileBegin', function (name, file) {
         if (name === 'memoryThumbnailImage') {
-            file.path = form.uploadDir + '/memoryThumbnail.jpg';
+            file.path = pathJoinRooted(form.uploadDir, 'memoryThumbnail.jpg');
         } else {
-            file.path = form.uploadDir + '/memory.jpg';
+            file.path = pathJoinRooted(form.uploadDir, 'memory.jpg');
         }
     });
 
@@ -350,7 +350,7 @@ const setVisualization = function(objectID, vis, callback) {
 const zipBackup = async function(objectId, req, res) {
     const objDir = pathJoinRooted(objectsPath, objectId);
     if (!await fileExists(objDir)) {
-        res.status(404).send('object directory for ' + objectId + 'does not exist at ' + objectsPath + '/' + objectId);
+        res.status(404).send('object directory does not exist at path');
         return;
     }
 
