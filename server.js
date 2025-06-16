@@ -1757,9 +1757,10 @@ function objectWebServer() {
 
         if ((req.method === 'GET') && (req.url.slice(-1) === '/' || urlArray[urlArray.length - 1].match(/\.html?$/))) {
             let fileName = pathJoinRooted(objectsPath, newUrl);
-            let fileName2 = pathJoinRooted(toolpath, newToolUrl);
 
-            if (toolpath && switchToInteraceTool && fs.existsSync(fileName2)) fileName = fileName2;
+            if (toolpath && switchToInteraceTool && fs.existsSync(pathJoinRooted(toolpath, newToolUrl))) {
+                fileName = pathJoinRooted(toolpath, newToolUrl);
+            }
 
             if (urlArray[urlArray.length - 1] !== 'index.html' && urlArray[urlArray.length - 1] !== 'index.htm') {
                 let indexPath = pathJoinRooted(fileName, 'index.html');
@@ -1830,8 +1831,7 @@ function objectWebServer() {
             res.json(json);
         } else {
 
-            let fileName2 = pathJoinRooted(toolpath, newToolUrl);
-            if (toolpath && switchToInteraceTool && fs.existsSync(fileName2)) {
+            if (toolpath && switchToInteraceTool && fs.existsSync(pathJoinRooted(toolpath, newToolUrl))) {
                 res.sendFile(newToolUrl, {root: toolpath});
             } else {
                 res.sendFile(newUrl, {root: objectsPath});
