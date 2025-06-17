@@ -1,6 +1,6 @@
 const fs = require('fs');
-const path = require('path');
 const {getFolderList} = require('./utilities.js');
+const {pathJoinRooted} = require('../utilities.js');
 
 /**
  * Loader for add-ons. Handles hidden folder logic and wraps the necessary
@@ -46,7 +46,7 @@ class AddonFolderLoader {
                 if (this.folderMap.hasOwnProperty(folder)) {
                     continue;
                 }
-                this.modules[folder] = require(path.join(addonFolder, folder, 'index.js'));
+                this.modules[folder] = require(pathJoinRooted(addonFolder, folder, 'index.js'));
                 this.folderMap[folder] = addonFolder;
             }
         }
@@ -60,7 +60,7 @@ class AddonFolderLoader {
      */
     reloadModule(folder) {
         const addonFolder = this.folderMap[folder];
-        const fullPath = path.join(addonFolder, folder, 'index.js');
+        const fullPath = pathJoinRooted(addonFolder, folder, 'index.js');
         // Deleting the require cache makes Node reevaluate the index.js file,
         // allowing the required module to change based on its new settings
         delete require.cache[require.resolve(fullPath)];
