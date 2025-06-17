@@ -578,7 +578,7 @@ async function getObjectFolderList() {
             continue;
         }
         try {
-            const folderStats = await fsProm.stat(path.join(objectsPath, objectFolder));
+            const folderStats = await fsProm.stat(pathJoinRooted(objectsPath, objectFolder));
             if (!folderStats.isDirectory()) {
                 continue;
             }
@@ -665,7 +665,7 @@ exports.updateObject = async function updateObject(objectName, objects) {
 };
 
 exports.deleteObject = async function deleteObject(objectName, objects, objectLookup, _activeHeartbeats, knownObjects, sceneGraph, setAnchors) {
-    let objectFolderPath = path.join(objectsPath, objectName);
+    let objectFolderPath = pathJoinRooted(objectsPath, objectName);
     await rmdirIfExists(objectFolderPath);
 
     let objectKey = readObject(objectLookup, objectName);
@@ -1093,7 +1093,7 @@ function getVideoDir(objectName) {
 
     // directory differs on mobile due to inability to call mkdir
     if (!isLightweightMobile) {
-        videoDir = path.join(objectsPath, objectName, identityFolderName, 'videos');
+        videoDir = pathJoinRooted(objectsPath, objectName, identityFolderName, 'videos');
 
         if (!fs.existsSync(videoDir)) {
             fs.mkdirSync(videoDir);
