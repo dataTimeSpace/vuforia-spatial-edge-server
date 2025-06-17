@@ -1,6 +1,6 @@
 let SceneNode = require('./SceneNode');
 let utils = require('./utils');
-const actionSender = require('../utilities').actionSender;
+const {actionSender, isValidId} = require('../utilities');
 const { SceneGraphEvent, SceneGraphEventOpEnum, SceneGraphNetworkManager } = require('./SceneGraphNetworking');
 const { getIP, resetObjectTimeout } = require('../../server');
 
@@ -51,6 +51,10 @@ class SceneGraph {
     }
 
     addObject(objectId, initialLocalMatrix, needsRotateX) {
+        if (!isValidId(objectId)) {
+            console.warn('Invalid id provided', objectId);
+            return;
+        }
         if (this.shouldBroadcastChanges) {
             const addObjectEvent = SceneGraphEvent.AddObject(objectId, initialLocalMatrix, needsRotateX);
             this.networkManager.addEvent(addObjectEvent);
@@ -77,6 +81,11 @@ class SceneGraph {
     }
 
     addFrame(objectId, frameId, linkedFrame, initialLocalMatrix) {
+        if (!isValidId(objectId) || !isValidId(frameId)) {
+            console.warn('Invalid id provided', objectId, frameId);
+            return;
+        }
+
         if (this.shouldBroadcastChanges) {
             const addFrameEvent = SceneGraphEvent.AddFrame(objectId, frameId, linkedFrame, initialLocalMatrix);
             this.networkManager.addEvent(addFrameEvent);
@@ -109,6 +118,10 @@ class SceneGraph {
     }
 
     addNode(objectId, frameId, nodeId, linkedNode, initialLocalMatrix) {
+        if (!isValidId(objectId) || !isValidId(frameId) || !isValidId(nodeId)) {
+            console.warn('Invalid id provided', objectId, frameId, nodeId);
+            return;
+        }
         if (this.shouldBroadcastChanges) {
             const addNodeEvent = SceneGraphEvent.AddNode(objectId, frameId, nodeId, linkedNode, initialLocalMatrix);
             this.networkManager.addEvent(addNodeEvent);
