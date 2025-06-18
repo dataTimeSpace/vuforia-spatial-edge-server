@@ -11,7 +11,7 @@
     "decompress-zip": "github:dataTimeSpace/decompress-zip",
     "directory-tree": "^3.5.2",
     "express": "^4.21.1",
-    "express-handlebars": "^5.3.5",
+    "express-handlebars": "^8.0.3",
     "form-data": "^4.0.2",
     "formidable": "^3",
     "ip": "^2.0.1",
