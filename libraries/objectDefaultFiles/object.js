@@ -1768,8 +1768,15 @@
 
         this.startVirtualizerRecording = function(callback) {
             spatialObject.messageCallBacks.startVirtualizerRecording = function (msgContent) {
-                if (callback && typeof msgContent.virtualizerRecordingError !== 'undefined') {
-                    callback(msgContent.virtualizerRecordingError);
+                if (callback && typeof msgContent.virtualizerRecordingData !== 'undefined') {
+                    const {
+                        error,
+                        baseUrl,
+                        recordingId,
+                        deviceId,
+                        orientation,
+                    } = msgContent.virtualizerRecordingData;
+                    callback(error, baseUrl, recordingId, deviceId, orientation);
                 }
             };
 
