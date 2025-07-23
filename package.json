@@ -25,7 +25,7 @@
     "simple-git": "^3.27.0",
     "toolsocket": "github:dataTimeSpace/toolsocket",
     "winston": "^3.14.1",
-    "ws": "^8.18.0",
+    "ws": "^8.18.3",
     "xml2js": "^0.6.2",
     "yargs": "^17.7.2"
   },
