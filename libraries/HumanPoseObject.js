@@ -55,6 +55,8 @@ function HumanPoseObject(ip, version, protocol, objectId, poseJointSchema) {
     // Parent is 'none' for any fused human object or standalone human object not currently associated with a fused one.
     // NOTE: this property can change over time and subscribers to this object should take that into account
     this.parent = 'none';
+    // Timestamp when this frame was added to the server for the first time
+    this.setCreatedAtIfUnsetOrEarlier(Date.now());
 }
 
 HumanPoseObject.prototype.getName = function(bodyId) {
@@ -153,7 +155,7 @@ HumanPoseObject.prototype.createPoseFrames = function(poseJointSchema) {
  * @return {Frame}
  */
 HumanPoseObject.prototype.createFrame = function(jointName, shouldCreateNode) {
-    var newFrame = new Frame(this.objectId, this.getFrameKey(jointName));
+    const newFrame = new Frame(this.objectId, this.getFrameKey(jointName));
     newFrame.name = jointName;
     newFrame.distanceScale = 2; // visible from twice as far away as usual frames
     newFrame.ar.scale = 1;
@@ -247,6 +249,24 @@ HumanPoseObject.getObjectId = function(bodyId) {
     return 'humanPoseObject' + bodyId;
 };
 
+/**
+ * Conform to interface of ObjectModel
+ */
+HumanPoseObject.prototype.setCreatedAtIfUnsetOrEarlier = function(createdAt) {
+    if (createdAt == null) {
+        createdAt = Date.now(); // Use current timestamp if null or undefined
+    }
+
+    // Validate that createdAt is a proper positive number
+    if (typeof createdAt !== 'number' || !isFinite(createdAt) || createdAt <= 0) {
+        createdAt = Date.now();
+    }
+
+    // If not set yet, or new timestamp is earlier than current, set it
+    if (typeof this.createdAt !== 'number' || createdAt < this.createdAt) {
+        this.createdAt = createdAt;
+    }
+};
 
 /**
  * Conform to interface of ObjectModel
@@ -277,7 +297,7 @@ HumanPoseObject.prototype.setFromJson = function(object) {
 HumanPoseObject.prototype.setFramesFromJson = function(frames) {
     this.frames = {};
     for (var frameKey in frames) {
-        let newFrame = new Frame(this.objectId, frameKey);
+        let newFrame = new Frame(this.objectId, frameKey, frames[frameKey].createdAt);
         Object.assign(newFrame, frames[frameKey]);
         newFrame.setNodesFromJson(frames[frameKey].nodes);
         this.frames[frameKey] = newFrame;

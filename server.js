@@ -797,7 +797,7 @@ async function loadWorldObject() {
     if (globalVariables.saveToDisk) {
         try {
             const contents = await fsProm.readFile(jsonFilePath, 'utf8');
-            worldObject = JSON.parse(contents);
+            worldObject.setFromJson(JSON.parse(contents));
         } catch (e) {
             console.error('No saved data for world object on server: ' + services.ip, e);
         }
@@ -834,7 +834,6 @@ async function loadAnchor(anchorName) {
         await mkdirIfNotExists(identityPath, {recursive: true});
     }
 
-
     // try to read previously saved data to overwrite the default anchor object
     if (globalVariables.saveToDisk) {
         try {
@@ -842,7 +841,8 @@ async function loadAnchor(anchorName) {
             let anchor = JSON.parse(contents);
             anchorUuid = anchor.objectId;
             if (anchorUuid) {
-                objects[anchorUuid] = anchor;
+                objects[anchorUuid] = new ObjectModel(services.ip, version, protocol, anchorUuid);
+                objects[anchorUuid].setFromJson(anchor);
             }
             return;
         } catch (e) {
@@ -851,7 +851,7 @@ async function loadAnchor(anchorName) {
     }
 
     // create a new anchor object
-    objects[anchorUuid] = new ObjectModel(services.ip, version, protocol, anchorUuid);
+    objects[anchorUuid] = new ObjectModel(services.ip, version, protocol, anchorUuid, objects[anchorUuid]?.createdAt);
     objects[anchorUuid].port = serverPort;
     objects[anchorUuid].name = anchorName;
 
@@ -3286,14 +3286,14 @@ async function createObjectFromTarget(folderVar) {
 
     let targetUniqueId = await utilities.getTargetIdFromTargetDat(pathJoinRooted(objectsPath, folderVar, identityFolderName, 'target'));
 
-    objects[objectId] = new ObjectModel(services.ip, version, protocol, objectId);
+    objects[objectId] = new ObjectModel(services.ip, version, protocol, objectId, objects[objectId]?.createdAt);
     objects[objectId].port = serverPort;
     objects[objectId].name = folderVar;
     objects[objectId].targetSize = objectSizeXML;
 
     try {
         const contents = await fsProm.readFile(pathJoinRooted(objFolder, identityFolderName, 'object.json'), 'utf8');
-        objects[objectId] = JSON.parse(contents);
+        objects[objectId].setFromJson(JSON.parse(contents));
         // objects[objectId].objectId = objectId;
         objects[objectId].ip = services.ip; //ip.address();
     } catch (e) {
@@ -3304,7 +3304,6 @@ async function createObjectFromTarget(folderVar) {
     if (objectId.indexOf(worldObjectName) > -1) { // TODO: implement a more robust way to tell if it's a world object
         objects[objectId].isWorldObject = true;
         objects[objectId].type = 'world';
-        objects[objectId].timestamp = Date.now();
     }
 
     objects[objectId].targetId = targetUniqueId;

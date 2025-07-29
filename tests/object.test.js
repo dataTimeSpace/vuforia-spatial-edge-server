@@ -87,7 +87,7 @@ async function testObjectCreation() {
     expect(fdsaFs.targetSize).toEqual({width: 0.3, height: 0.3});
     expect(fdsaFs.isWorldObject).toBe(false);
     expect(fdsaFs.type).toBe('object');
-    expect(fdsaFs.timestamp).toBe(null);
+    expect(typeof fdsaFs.createdAt).toBe('number');
     expect(fdsaFs.port).toBe(8080);
 
     return fdsaApi;
