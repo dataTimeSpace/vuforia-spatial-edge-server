@@ -99,6 +99,9 @@ ObjectModel.prototype.setFramesFromJson = function(frames) {
     for (var frameKey in frames) {
         let newFrame = new Frame(this.objectId, frameKey);
         Object.assign(newFrame, frames[frameKey]);
+        if (!frames[frameKey].created) {
+            newFrame.createdAt = Date.now(); // add `createdAt` to frames that don't have it
+        }
         newFrame.setNodesFromJson(frames[frameKey].nodes);
         this.frames[frameKey] = newFrame;
     }

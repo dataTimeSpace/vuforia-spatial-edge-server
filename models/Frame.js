@@ -62,6 +62,8 @@ function Frame(objectId, frameId) {
     this.groupID = null;
     // "Pinned" frames are by default loaded and visible with the object they belong to. Unpinned must be asked for.
     this.pinned = true;
+    // Timestamp when this frame was added to the server for the first time
+    this.createdAt = null;
 }
 
 /**

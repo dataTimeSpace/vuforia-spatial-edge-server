@@ -55,6 +55,8 @@ const addFrameToObject = function (objectKey, frameKey, frame, callback) {
         newFrame.src = frame.src;
         newFrame.width = frame.width;
         newFrame.height = frame.height;
+        // only set the created if it doesn't exist yet
+        newFrame.createdAt = frame.createdAt || Date.now();
 
         // give default values for this node type to each node's public data, if not already assigned
         for (let key in newFrame.nodes) {
