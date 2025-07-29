@@ -188,7 +188,7 @@ exports.printFolder = async function printFolder(objects, objectsPath, _debug, o
 
             // populate the data for each frame template on the frontend, using data from the object json structure
             for (var frameKey in objects[thisObjectKey].frames) {
-                const createdAt = objects[thisObjectKey].frames[frameKey].createdAt || Date.now();
+                const createdAt = objects[thisObjectKey].frames[frameKey].createdAt;
                 newObject[thisObjectKey].frames[frameKey] = new Frame(thisObjectKey, frameKey, createdAt);
                 newObject[thisObjectKey].frames[frameKey].name = objects[thisObjectKey].frames[frameKey].name;
                 newObject[thisObjectKey].frames[frameKey].location = objects[thisObjectKey].frames[frameKey].location; // 'global' or 'local'

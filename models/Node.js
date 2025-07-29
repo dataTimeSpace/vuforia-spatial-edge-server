@@ -7,7 +7,7 @@ const availableModules = require('../libraries/availableModules');
  *
  * @constructor
  */
-function Node(name, type, objectId, frameId, nodeId) {
+function Node(name, type, objectId, frameId, nodeId, createdAt) {
     // the name of each link. It is used in the Reality Editor to show the IO name.
     this.name = name || '';
     // the ID of the containing object.
@@ -35,6 +35,9 @@ function Node(name, type, objectId, frameId, nodeId) {
     // indicates how much calls per second is happening on this node
     this.stress = 0;
 
+    // Timestamp when this frame was added to the server for the first time
+    this.setCreatedAtIfUnsetOrEarlier(createdAt); // Defaults to Date.now()
+
     // load the publicData/privateData from the properties defined by this node type
     let nodeTypes = availableModules.getNodes();
     if (typeof nodeTypes[type] === 'undefined') {
@@ -53,6 +56,27 @@ function Node(name, type, objectId, frameId, nodeId) {
 
     this.setupProgram();
 }
+
+/**
+ * Sets `createdAt` if it hasn't been set, or if the new value is a valid earlier timestamp.
+ * If the input is undefined/null, it uses Date.now().
+ * @param {*} createdAt - candidate timestamp
+ */
+Node.prototype.setCreatedAtIfUnsetOrEarlier = function(createdAt) {
+    if (createdAt == null) {
+        createdAt = Date.now(); // Use current timestamp if null or undefined
+    }
+
+    // Validate that createdAt is a proper positive number
+    if (typeof createdAt !== 'number' || !isFinite(createdAt) || createdAt <= 0) {
+        createdAt = Date.now();
+    }
+
+    // If not set yet, or new timestamp is earlier than current, set it
+    if (typeof this.createdAt !== 'number' || createdAt < this.createdAt) {
+        this.createdAt = createdAt;
+    }
+};
 
 /**
  * Triggers the exports.setup function defined in the add-on for this node type

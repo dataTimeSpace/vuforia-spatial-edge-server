@@ -91,7 +91,8 @@ test('target upload to /content/:objectName', async () => {
     delete objJson.ip;
     delete objJson.port;
     delete objJson.tcs;
-    delete objJson.timestamp;
+    expect(typeof objJson.createdAt).toBe('number');
+    delete objJson.createdAt;
     expect(objJson).toEqual({
         objectId: preUploadObjJson.objectId,
         name: '_WORLD_instantScan6bK1sn5d',

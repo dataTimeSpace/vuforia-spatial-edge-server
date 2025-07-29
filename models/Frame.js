@@ -6,10 +6,6 @@ const Node = require('./Node.js');
  * @constructor
  */
 function Frame(objectId, frameId, createdAt) {
-    if (!createdAt) {
-        console.warn('Frame was constructed without a createdAt timestamp; defaulting to Date.now()');
-    }
-
     // The ID for the object will be broadcasted along with the IP. It consists of the name with a 12 letter UUID added.
     this.objectId = objectId;
     // Stores its own unique ID
@@ -67,8 +63,29 @@ function Frame(objectId, frameId, createdAt) {
     // "Pinned" frames are by default loaded and visible with the object they belong to. Unpinned must be asked for.
     this.pinned = true;
     // Timestamp when this frame was added to the server for the first time
-    this.createdAt = createdAt || Date.now();
+    this.setCreatedAtIfUnsetOrEarlier(createdAt); // defaults to Date.now()
 }
+
+/**
+ * Sets `createdAt` if it hasn't been set, or if the new value is a valid earlier timestamp.
+ * If the input is undefined/null, it uses Date.now().
+ * @param {*} createdAt - candidate timestamp
+ */
+Frame.prototype.setCreatedAtIfUnsetOrEarlier = function(createdAt) {
+    if (createdAt == null) {
+        createdAt = Date.now(); // Use current timestamp if null or undefined
+    }
+
+    // Validate that createdAt is a proper finite non-negative number
+    if (typeof createdAt !== 'number' || !isFinite(createdAt) || createdAt < 0) {
+        createdAt = Date.now();
+    }
+
+    // If not set yet, or new timestamp is earlier than current, set it
+    if (typeof this.createdAt !== 'number' || createdAt < this.createdAt) {
+        this.createdAt = createdAt;
+    }
+};
 
 /**
  * Should be called before deleting the frame in order to properly destroy it
@@ -91,6 +108,7 @@ Frame.prototype.deconstruct = function() {
  */
 Frame.prototype.setFromJson = function(frame) {
     Object.assign(this, frame);
+    this.setCreatedAtIfUnsetOrEarlier(frame.createdAt);
     this.setNodesFromJson(frame.nodes);
 };
 
@@ -106,6 +124,7 @@ Frame.prototype.setNodesFromJson = function(nodes) {
         let type = nodes[nodeKey].type;
         let newNode = new Node(name, type, this.objectId, this.uuid, nodeKey);
         Object.assign(newNode, nodes[nodeKey]);
+        newNode.setCreatedAtIfUnsetOrEarlier(nodes[nodeKey].createdAt);
         this.nodes[nodeKey] = newNode;
     }
 };
