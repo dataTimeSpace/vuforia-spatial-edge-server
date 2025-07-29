@@ -851,8 +851,7 @@ async function loadAnchor(anchorName) {
     }
 
     // create a new anchor object
-    const createdAt = (objects[anchorUuid] && objects[anchorUuid].createdAt);
-    objects[anchorUuid] = new ObjectModel(services.ip, version, protocol, anchorUuid, createdAt);
+    objects[anchorUuid] = new ObjectModel(services.ip, version, protocol, anchorUuid, objects[anchorUuid]?.createdAt);
     objects[anchorUuid].port = serverPort;
     objects[anchorUuid].name = anchorName;
 
@@ -3287,8 +3286,7 @@ async function createObjectFromTarget(folderVar) {
 
     let targetUniqueId = await utilities.getTargetIdFromTargetDat(pathJoinRooted(objectsPath, folderVar, identityFolderName, 'target'));
 
-    const createdAt = (objects[objectId] && objects[objectId].createdAt);
-    objects[objectId] = new ObjectModel(services.ip, version, protocol, objectId, createdAt);
+    objects[objectId] = new ObjectModel(services.ip, version, protocol, objectId, objects[objectId]?.createdAt);
     objects[objectId].port = serverPort;
     objects[objectId].name = folderVar;
     objects[objectId].targetSize = objectSizeXML;
