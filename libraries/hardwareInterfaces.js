@@ -455,7 +455,7 @@ exports.setTool = function (object, tool, newTool, dirName) {
                     }
                 }
                 if (!objects[objectID].frames.hasOwnProperty(frameUuid)) {
-                    objects[objectID].frames[frameUuid] = new Frame(objectID, frameUuid);
+                    objects[objectID].frames[frameUuid] = new Frame(objectID, frameUuid, Date.now());
                     objects[objectID].frames[frameUuid].name = tool;
                 }
                 //define the tool that is used with this frame
@@ -485,7 +485,7 @@ exports.addNode = function (object, tool, node, type, position) {
         utilities.createFolder(object); // todo may need to `await` this
 
         // create a new anchor object
-        objects[objectID] = new ObjectModel(services.ip, version, protocol, objectID);
+        objects[objectID] = new ObjectModel(services.ip, version, protocol, objectID, Date.now());
         objects[objectID].port = serverPort;
         objects[objectID].name = object;
         objects[objectID].isAnchor = true;
@@ -518,7 +518,7 @@ exports.addNode = function (object, tool, node, type, position) {
             objects[objectID].name = object;
 
             if (!objects[objectID].frames.hasOwnProperty(frameUuid)) {
-                objects[objectID].frames[frameUuid] = new Frame(objectID, frameUuid);
+                objects[objectID].frames[frameUuid] = new Frame(objectID, frameUuid, Date.now());
                 utilities.createFrameFolder(object, tool, dirnameO, 'local'); // todo maybe await
             } else {
                 utilities.createFrameFolder(object, tool, dirnameO, objects[objectID].frames[frameUuid].location); // todo maybe await
@@ -682,7 +682,7 @@ exports.generateFrame = function (objectName, frameType, relativeMatrix) {
     }
 
     let frameKey = objectID + frameType + utilities.uuidTime();
-    let newFrame = new Frame(objectID, frameKey);
+    let newFrame = new Frame(objectID, frameKey, Date.now());
     newFrame.name = frameType;
     newFrame.location = 'global';
     newFrame.src = frameType;

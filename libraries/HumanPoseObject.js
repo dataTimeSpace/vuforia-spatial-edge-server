@@ -153,7 +153,7 @@ HumanPoseObject.prototype.createPoseFrames = function(poseJointSchema) {
  * @return {Frame}
  */
 HumanPoseObject.prototype.createFrame = function(jointName, shouldCreateNode) {
-    var newFrame = new Frame(this.objectId, this.getFrameKey(jointName));
+    const newFrame = new Frame(this.objectId, this.getFrameKey(jointName), Date.now());
     newFrame.name = jointName;
     newFrame.distanceScale = 2; // visible from twice as far away as usual frames
     newFrame.ar.scale = 1;
@@ -277,7 +277,8 @@ HumanPoseObject.prototype.setFromJson = function(object) {
 HumanPoseObject.prototype.setFramesFromJson = function(frames) {
     this.frames = {};
     for (var frameKey in frames) {
-        let newFrame = new Frame(this.objectId, frameKey);
+        const createdAt = frames[frameKey].createdAt || Date.now();
+        let newFrame = new Frame(this.objectId, frameKey, createdAt);
         Object.assign(newFrame, frames[frameKey]);
         newFrame.setNodesFromJson(frames[frameKey].nodes);
         this.frames[frameKey] = newFrame;

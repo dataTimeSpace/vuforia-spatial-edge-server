@@ -589,6 +589,28 @@ nodeUtilities.setup(objects, sceneGraph, knownObjects, socketArray, globalVariab
 
     await startSystem();
 
+    const logCreatedAt = (objs) => {
+        const simplified = {};
+
+        for (const [objectId, objectData] of Object.entries(objs)) {
+            const { createdAt, frames } = objectData;
+            simplified[objectId] = {
+                createdAt,
+                frames: {}
+            };
+
+            if (frames && typeof frames === 'object') {
+                for (const [frameId, frameData] of Object.entries(frames)) {
+                    simplified[objectId].frames[frameId] = {
+                        createdAt: frameData.createdAt
+                    };
+                }
+            }
+        }
+        console.log(simplified);
+    }
+    logCreatedAt(objects);
+
     // Get the directory names of all available sources for the 3D-UI
     if (!isLightweightMobile) {
         hardwareInterfaceLoader = new AddonFolderLoader(hardwareInterfacePaths);
@@ -661,7 +683,7 @@ async function loadObjects() {
 
         if (tempFolderName !== null) {
             // fill objects with objects named by the folders in objects
-            objects[tempFolderName] = new ObjectModel(services.ip, version, protocol, tempFolderName);
+            objects[tempFolderName] = new ObjectModel(services.ip, version, protocol, tempFolderName, Date.now());
             objects[tempFolderName].port = serverPort;
             objects[tempFolderName].name = objectFolderList[i];
 
@@ -677,6 +699,7 @@ async function loadObjects() {
             try {
                 const objectJsonText = await fsProm.readFile(pathJoinRooted(objectsPath, objectFolderList[i], identityFolderName, 'object.json'), 'utf8');
                 objects[tempFolderName] = JSON.parse(objectJsonText);
+                // objects[tempFolderName].setFromJson(JSON.parse(objectJsonText));
                 const obj = objects[tempFolderName];
                 obj.ip = services.ip; // ip.address();
 
@@ -708,7 +731,8 @@ async function loadObjects() {
                 let newObj = new ObjectModel(obj.ip,
                     obj.version,
                     obj.protocol,
-                    obj.objectId);
+                    obj.objectId,
+                    obj.createdAt || Date.now());
                 newObj.setFromJson(obj);
                 objects[tempFolderName] = newObj;
             } catch (e) {
@@ -787,7 +811,7 @@ async function loadWorldObject() {
 
     // create a new world object
     let thisWorldObjectId = (isLightweightMobile || isStandaloneMobile) ? worldObjectName : (worldObjectName + utilities.uuidTime());
-    worldObject = new ObjectModel(services.ip, version, protocol, thisWorldObjectId);
+    worldObject = new ObjectModel(services.ip, version, protocol, thisWorldObjectId, Date.now());
     worldObject.port = serverPort;
     worldObject.name = worldObjectName;
     worldObject.isWorldObject = true;
@@ -797,7 +821,8 @@ async function loadWorldObject() {
     if (globalVariables.saveToDisk) {
         try {
             const contents = await fsProm.readFile(jsonFilePath, 'utf8');
-            worldObject = JSON.parse(contents);
+            // worldObject = JSON.parse(contents);
+            worldObject.setFromJson(JSON.parse(contents));
         } catch (e) {
             console.error('No saved data for world object on server: ' + services.ip, e);
         }
@@ -834,7 +859,6 @@ async function loadAnchor(anchorName) {
         await mkdirIfNotExists(identityPath, {recursive: true});
     }
 
-
     // try to read previously saved data to overwrite the default anchor object
     if (globalVariables.saveToDisk) {
         try {
@@ -842,7 +866,7 @@ async function loadAnchor(anchorName) {
             let anchor = JSON.parse(contents);
             anchorUuid = anchor.objectId;
             if (anchorUuid) {
-                objects[anchorUuid] = anchor;
+                objects[anchorUuid].setFromJson(anchor);
             }
             return;
         } catch (e) {
@@ -851,7 +875,8 @@ async function loadAnchor(anchorName) {
     }
 
     // create a new anchor object
-    objects[anchorUuid] = new ObjectModel(services.ip, version, protocol, anchorUuid);
+    const createdAt = (objects[anchorUuid] && objects[anchorUuid].createdAt) || Date.now();
+    objects[anchorUuid] = new ObjectModel(services.ip, version, protocol, anchorUuid, createdAt);
     objects[anchorUuid].port = serverPort;
     objects[anchorUuid].name = anchorName;
 
@@ -863,6 +888,8 @@ async function loadAnchor(anchorName) {
         0, 0, 0, 1
     ];
     objects[anchorUuid].tcs = 0;
+
+    // objects[anchorUuid].createdAt = objects[anchorUuid].createdAt || Date.now();
 
     if (globalVariables.saveToDisk) {
         try {
@@ -2439,7 +2466,7 @@ function objectWebServer() {
                             // special constructor for HumanPoseObject that also creates a frame for each joint
                             objects[objectId] = new HumanPoseObject(services.ip, version, protocol, objectId, JSON.parse(req.body.poseJointSchema));
                         } else {
-                            objects[objectId] = new ObjectModel(services.ip, version, protocol, objectId);
+                            objects[objectId] = new ObjectModel(services.ip, version, protocol, objectId, Date.now());
                         }
 
                         objects[objectId].name = req.body.name;
@@ -2451,6 +2478,8 @@ function objectWebServer() {
                         if (typeof req.body.worldId !== 'undefined') {
                             objects[objectId].worldId = req.body.worldId;
                         }
+
+                        objects[objectId].createdAt = objects[objectId].createdAt || Date.now();
 
                         await utilities.writeObjectToFile(objects, objectId, globalVariables.saveToDisk);
                         utilities.writeObject(objectLookup, req.body.name, objectId);
@@ -2472,7 +2501,7 @@ function objectWebServer() {
                                     return;
                                 }
 
-                                objects[objectId].frames[toolId] = new Frame(objectId, toolId);
+                                objects[objectId].frames[toolId] = new Frame(objectId, toolId, Date.now());
                                 objects[objectId].frames[toolId].name = toolName;
                                 await utilities.writeObjectToFile(objects, objectId, globalVariables.saveToDisk);
 
@@ -2536,7 +2565,7 @@ function objectWebServer() {
                             return;
                         }
 
-                        objects[objectKey].frames[objectKey + req.body.frame] = new Frame(objectKey, objectKey + req.body.frame);
+                        objects[objectKey].frames[objectKey + req.body.frame] = new Frame(objectKey, objectKey + req.body.frame, Date.now());
                         objects[objectKey].frames[objectKey + req.body.frame].name = req.body.frame;
                         await utilities.writeObjectToFile(objects, objectKey, globalVariables.saveToDisk);
                         // sceneGraph.addObjectAndChildren(tempFolderName, objects[tempFolderName]);
@@ -3286,14 +3315,16 @@ async function createObjectFromTarget(folderVar) {
 
     let targetUniqueId = await utilities.getTargetIdFromTargetDat(pathJoinRooted(objectsPath, folderVar, identityFolderName, 'target'));
 
-    objects[objectId] = new ObjectModel(services.ip, version, protocol, objectId);
+    const createdAt = (objects[objectId] && objects[objectId].createdAt) || Date.now();
+    objects[objectId] = new ObjectModel(services.ip, version, protocol, objectId, createdAt);
     objects[objectId].port = serverPort;
     objects[objectId].name = folderVar;
     objects[objectId].targetSize = objectSizeXML;
 
     try {
         const contents = await fsProm.readFile(pathJoinRooted(objFolder, identityFolderName, 'object.json'), 'utf8');
-        objects[objectId] = JSON.parse(contents);
+        // objects[objectId] = JSON.parse(contents);
+        objects[objectId].setFromJson(JSON.parse(contents));
         // objects[objectId].objectId = objectId;
         objects[objectId].ip = services.ip; //ip.address();
     } catch (e) {
@@ -3304,7 +3335,6 @@ async function createObjectFromTarget(folderVar) {
     if (objectId.indexOf(worldObjectName) > -1) { // TODO: implement a more robust way to tell if it's a world object
         objects[objectId].isWorldObject = true;
         objects[objectId].type = 'world';
-        objects[objectId].timestamp = Date.now();
     }
 
     objects[objectId].targetId = targetUniqueId;

@@ -5,7 +5,11 @@ const Node = require('./Node.js');
  *
  * @constructor
  */
-function Frame(objectId, frameId) {
+function Frame(objectId, frameId, createdAt) {
+    if (!createdAt) {
+        console.warn('Frame was constructed without a createdAt timestamp; defaulting to Date.now()');
+    }
+
     // The ID for the object will be broadcasted along with the IP. It consists of the name with a 12 letter UUID added.
     this.objectId = objectId;
     // Stores its own unique ID
@@ -63,7 +67,7 @@ function Frame(objectId, frameId) {
     // "Pinned" frames are by default loaded and visible with the object they belong to. Unpinned must be asked for.
     this.pinned = true;
     // Timestamp when this frame was added to the server for the first time
-    this.createdAt = null;
+    this.createdAt = createdAt || Date.now();
 }
 
 /**

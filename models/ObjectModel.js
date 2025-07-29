@@ -9,8 +9,13 @@ const Frame = require('./Frame.js'); // needs reference to Frame constructor
  * @param {string} version - Version number of server, currently 3.1.0 or 3.2.0
  * @param {string} protocol - Protocol of object, one of R0, R1, or R2 (current)
  * @param {string} objectId - Stores its own UUID
+ * @param {number} createdAt - Timestamp when the object was first created on the server, e.g. Date.now()
  */
-function ObjectModel(ip, version, protocol, objectId) {
+function ObjectModel(ip, version, protocol, objectId, createdAt) {
+    if (!createdAt) {
+        console.warn('Object was constructed without a createdAt timestamp; defaulting to Date.now()');
+    }
+
     // The ID for the object will be broadcasted along with the IP. It consists of the name with a 12 letter UUID added.
     this.objectId = objectId;
     // The name for the object used for interfaces.
@@ -60,9 +65,10 @@ function ObjectModel(ip, version, protocol, objectId) {
     this.isWorldObject = false; // a bit redundant with this.type, but good for backwards compatibility
     this.isAnchor = false;
     this.type = 'object'; // or: 'world' or 'human' or 'avatar' etc...
-    this.timestamp = null; // timestamp optionally stores when the object was first created
     this.gaussianSplatRequestId = null; // Optional id for in-progress request to GS server
     this.renderMode = null; // Can be set to 'mesh' or 'ai' to synchronize render mode across clients
+    // Timestamp when this object was added to the server for the first time
+    this.createdAt = createdAt || Date.now();
 }
 
 /**
@@ -86,6 +92,9 @@ ObjectModel.prototype.deconstruct = function() {
  */
 ObjectModel.prototype.setFromJson = function(object) {
     Object.assign(this, object);
+    // if (!object.createdAt) {
+    //     this.createdAt = Date.now(); // add `createdAt` to objects that don't have it
+    // }
     this.setFramesFromJson(object.frames);
 };
 
@@ -97,11 +106,12 @@ ObjectModel.prototype.setFromJson = function(object) {
 ObjectModel.prototype.setFramesFromJson = function(frames) {
     this.frames = {};
     for (var frameKey in frames) {
-        let newFrame = new Frame(this.objectId, frameKey);
+        const createdAt = frames[frameKey].createdAt || Date.now(); // add `createdAt` to frames that don't have it
+        let newFrame = new Frame(this.objectId, frameKey, createdAt);
         Object.assign(newFrame, frames[frameKey]);
-        if (!frames[frameKey].created) {
-            newFrame.createdAt = Date.now(); // add `createdAt` to frames that don't have it
-        }
+        // if (!frames[frameKey].createdAt) {
+        //     newFrame.createdAt = Date.now(); 
+        // }
         newFrame.setNodesFromJson(frames[frameKey].nodes);
         this.frames[frameKey] = newFrame;
     }
