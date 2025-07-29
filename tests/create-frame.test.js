@@ -156,7 +156,8 @@ const getFrameAddedRef = (objectId) => {
         staticCopy: false,
         distanceScale: 1,
         groupID: null,
-        pinned: true
+        pinned: true,
+        createdAt: Date.now(),
     };
 };
 
@@ -194,9 +195,16 @@ test('new object creation', async () => {
     const worldAdded = await getObject(objectId);
     let expectedFrames = {};
     expectedFrames[`${objectId}spatialDraw1mJx458y5jn9a`] = frameAddedRef;
+
+    const addedFrame = worldAdded.frames[frameAddedRef.uuid];
+    expect(addedFrame).toBeDefined();
+    expect(typeof addedFrame.createdAt).toBe('number'); // first check that it's a number
+    addedFrame.createdAt = frameAddedRef.createdAt; // Date.now() changes, so set it exactly before checking toEqual
     expect(worldAdded.frames).toEqual(expectedFrames);
 
     const frameAdded = await getFrame(objectId);
+    expect(typeof frameAdded.createdAt).toBe('number'); // do similar checks on the server copy
+    frameAdded.createdAt = frameAddedRef.createdAt; // otherwise off by a few ms, e.g. 1753800310860 vs 1753800311076
     expect(frameAdded).toEqual(frameAddedRef);
 
     const snapshot = filterSnapshot(snapshotDirectory(objectsPath), (filePath) => {
