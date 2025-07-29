@@ -172,6 +172,18 @@ const getFrameMovedRef = (objectId) => {
     return frameMovedRef;
 };
 
+/**
+ * `createdAt` might be off by a few ms, e.g. 1753800310860 vs 1753800311076
+ *  so before checking isEqual between two sets of frames, first sync their createdAt times
+ */
+const syncCreatedAt = (expectedFrames, actualFrames) => {
+    for (const uuid of Object.keys(expectedFrames)) {
+        if (actualFrames[uuid] && typeof actualFrames[uuid].createdAt === 'number') {
+            expectedFrames[uuid].createdAt = actualFrames[uuid].createdAt;
+        }
+    }
+};
+
 test('new object creation', async () => {
     let objectsPath = require('../config.js').objectsPath;
 
@@ -199,7 +211,7 @@ test('new object creation', async () => {
     const addedFrame = worldAdded.frames[frameAddedRef.uuid];
     expect(addedFrame).toBeDefined();
     expect(typeof addedFrame.createdAt).toBe('number'); // first check that it's a number
-    addedFrame.createdAt = frameAddedRef.createdAt; // Date.now() changes, so set it exactly before checking toEqual
+    syncCreatedAt(expectedFrames, worldAdded.frames); // Date.now() changes, so set it exactly before checking toEqual
     expect(worldAdded.frames).toEqual(expectedFrames);
 
     const frameAdded = await getFrame(objectId);
@@ -217,6 +229,7 @@ test('new object creation', async () => {
             break;
         }
     }
+    syncCreatedAt(expectedFrames, objFs.frames);
     expect(objFs.frames).toEqual(expectedFrames);
 
     const frameMovedRef = getFrameMovedRef(objectId);
@@ -225,6 +238,7 @@ test('new object creation', async () => {
     const worldMoved = await getObject(objectId);
     let expectedFramesMoved = {};
     expectedFramesMoved[`${objectId}spatialDraw1mJx458y5jn9a`] = frameMovedRef;
+    syncCreatedAt(expectedFramesMoved, worldMoved.frames);
     expect(worldMoved.frames).toEqual(expectedFramesMoved);
     const frameMoved = await getFrame(objectId);
     expect(frameMoved).toEqual(frameMovedRef);
@@ -239,5 +253,6 @@ test('new object creation', async () => {
             break;
         }
     }
+    syncCreatedAt(expectedFramesMoved, objFs.frames);
     expect(objFs.frames).toEqual(expectedFramesMoved);
 });
