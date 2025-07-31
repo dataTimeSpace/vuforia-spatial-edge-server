@@ -156,7 +156,8 @@ const getFrameAddedRef = (objectId) => {
         staticCopy: false,
         distanceScale: 1,
         groupID: null,
-        pinned: true
+        pinned: true,
+        createdAt: Date.now(),
     };
 };
 
@@ -169,6 +170,18 @@ const getFrameMovedRef = (objectId) => {
         -150, -293, -555, 1
     ];
     return frameMovedRef;
+};
+
+/**
+ * `createdAt` might be off by a few ms, e.g. 1753800310860 vs 1753800311076
+ *  so before checking isEqual between two sets of frames, first sync their createdAt times
+ */
+const syncCreatedAt = (expectedFrames, actualFrames) => {
+    for (const uuid of Object.keys(expectedFrames)) {
+        if (actualFrames[uuid] && typeof actualFrames[uuid].createdAt === 'number') {
+            expectedFrames[uuid].createdAt = actualFrames[uuid].createdAt;
+        }
+    }
 };
 
 test('new object creation', async () => {
@@ -194,9 +207,16 @@ test('new object creation', async () => {
     const worldAdded = await getObject(objectId);
     let expectedFrames = {};
     expectedFrames[`${objectId}spatialDraw1mJx458y5jn9a`] = frameAddedRef;
+
+    const addedFrame = worldAdded.frames[frameAddedRef.uuid];
+    expect(addedFrame).toBeDefined();
+    expect(typeof addedFrame.createdAt).toBe('number'); // first check that it's a number
+    syncCreatedAt(expectedFrames, worldAdded.frames); // Date.now() changes, so set it exactly before checking toEqual
     expect(worldAdded.frames).toEqual(expectedFrames);
 
     const frameAdded = await getFrame(objectId);
+    expect(typeof frameAdded.createdAt).toBe('number'); // do similar checks on the server copy
+    frameAdded.createdAt = frameAddedRef.createdAt; // otherwise off by a few ms, e.g. 1753800310860 vs 1753800311076
     expect(frameAdded).toEqual(frameAddedRef);
 
     const snapshot = filterSnapshot(snapshotDirectory(objectsPath), (filePath) => {
@@ -209,6 +229,7 @@ test('new object creation', async () => {
             break;
         }
     }
+    syncCreatedAt(expectedFrames, objFs.frames);
     expect(objFs.frames).toEqual(expectedFrames);
 
     const frameMovedRef = getFrameMovedRef(objectId);
@@ -217,6 +238,7 @@ test('new object creation', async () => {
     const worldMoved = await getObject(objectId);
     let expectedFramesMoved = {};
     expectedFramesMoved[`${objectId}spatialDraw1mJx458y5jn9a`] = frameMovedRef;
+    syncCreatedAt(expectedFramesMoved, worldMoved.frames);
     expect(worldMoved.frames).toEqual(expectedFramesMoved);
     const frameMoved = await getFrame(objectId);
     expect(frameMoved).toEqual(frameMovedRef);
@@ -231,5 +253,6 @@ test('new object creation', async () => {
             break;
         }
     }
+    syncCreatedAt(expectedFramesMoved, objFs.frames);
     expect(objFs.frames).toEqual(expectedFramesMoved);
 });

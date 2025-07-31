@@ -9,8 +9,9 @@ const Frame = require('./Frame.js'); // needs reference to Frame constructor
  * @param {string} version - Version number of server, currently 3.1.0 or 3.2.0
  * @param {string} protocol - Protocol of object, one of R0, R1, or R2 (current)
  * @param {string} objectId - Stores its own UUID
+ * @param {number|undefined} createdAt - Timestamp when the object was first created on the server, e.g. Date.now() or earlier
  */
-function ObjectModel(ip, version, protocol, objectId) {
+function ObjectModel(ip, version, protocol, objectId, createdAt) {
     // The ID for the object will be broadcasted along with the IP. It consists of the name with a 12 letter UUID added.
     this.objectId = objectId;
     // The name for the object used for interfaces.
@@ -60,10 +61,32 @@ function ObjectModel(ip, version, protocol, objectId) {
     this.isWorldObject = false; // a bit redundant with this.type, but good for backwards compatibility
     this.isAnchor = false;
     this.type = 'object'; // or: 'world' or 'human' or 'avatar' etc...
-    this.timestamp = null; // timestamp optionally stores when the object was first created
     this.gaussianSplatRequestId = null; // Optional id for in-progress request to GS server
     this.renderMode = null; // Can be set to 'mesh' or 'ai' to synchronize render mode across clients
+    // Timestamp when this frame was added to the server for the first time
+    this.setCreatedAtIfUnsetOrEarlier(createdAt); // Defaults to Date.now()
 }
+
+/**
+ * Sets `createdAt` if it hasn't been set, or if the new value is a valid earlier timestamp.
+ * If the input is undefined/null, it uses Date.now().
+ * @param {*} createdAt - candidate timestamp
+ */
+ObjectModel.prototype.setCreatedAtIfUnsetOrEarlier = function(createdAt) {
+    if (createdAt == null) {
+        createdAt = Date.now(); // Use current timestamp if null or undefined
+    }
+
+    // Validate that createdAt is a proper positive number
+    if (typeof createdAt !== 'number' || !isFinite(createdAt) || createdAt <= 0) {
+        createdAt = Date.now();
+    }
+
+    // If not set yet, or new timestamp is earlier than current, set it
+    if (typeof this.createdAt !== 'number' || createdAt < this.createdAt) {
+        this.createdAt = createdAt;
+    }
+};
 
 /**
  * Should be called before deleting the object in order to properly destroy it
@@ -86,6 +109,7 @@ ObjectModel.prototype.deconstruct = function() {
  */
 ObjectModel.prototype.setFromJson = function(object) {
     Object.assign(this, object);
+    this.setCreatedAtIfUnsetOrEarlier(object.createdAt);
     this.setFramesFromJson(object.frames);
 };
 
@@ -97,9 +121,8 @@ ObjectModel.prototype.setFromJson = function(object) {
 ObjectModel.prototype.setFramesFromJson = function(frames) {
     this.frames = {};
     for (var frameKey in frames) {
-        let newFrame = new Frame(this.objectId, frameKey);
-        Object.assign(newFrame, frames[frameKey]);
-        newFrame.setNodesFromJson(frames[frameKey].nodes);
+        let newFrame = new Frame(this.objectId, frameKey, frames[frameKey].createdAt);
+        newFrame.setFromJson(frames[frameKey]);
         this.frames[frameKey] = newFrame;
     }
 };

@@ -39,7 +39,7 @@ const addFrameToObject = function (objectKey, frameKey, frame, callback) {
 
         await utilities.createFrameFolder(object.name, frame.name, dirname, frame.location);
 
-        var newFrame = new Frame(frame.objectId, frameKey);
+        const newFrame = new Frame(frame.objectId, frameKey, frame.createdAt);
         newFrame.name = frame.name;
         newFrame.visualization = frame.visualization;
         newFrame.ar = frame.ar;
@@ -179,7 +179,7 @@ const copyFrame = function(objectID, frameID, body, callback) {
         var newName = frame.src + utilities.uuidTime();
         var newFrameKey = objectID + newName;
 
-        var newFrame = new Frame(frame.objectId, newFrameKey);
+        const newFrame = new Frame(frame.objectId, newFrameKey, frame.createdAt);
         newFrame.name = newName;
         newFrame.visualization = frame.visualization;
         // deep clone ar by value, not reference, otherwise posting new position for one might affect the other
@@ -258,7 +258,7 @@ const updateFrame = function(objectID, frameID, body, callback) {
         // Copy over all properties of frame
         Object.assign(object.frames[frameID], frame);
 
-        let newFrame = new Frame(frame.objectId, frame.uuid);
+        let newFrame = new Frame(frame.objectId, frame.uuid, frame.createdAt);
         newFrame.setFromJson(frame);
         object.frames[frameID] = newFrame;
 
