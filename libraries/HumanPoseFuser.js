@@ -424,6 +424,11 @@ class HumanPoseFuser {
      * @returns {number} depth in mm
      */
     calculateDistanceToCamera(joints, cameraPose) {
+        if (cameraPose?.length !== 16) {
+            console.warn('Invalid camera pose');
+            return 0;
+        }
+
         // create 3x4 transform matrix (defined row by row)
         // cameraPose is stored column-wise in 1D array
         let T = new Matrix([
