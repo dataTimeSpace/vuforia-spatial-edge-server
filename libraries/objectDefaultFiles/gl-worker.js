@@ -328,7 +328,7 @@ class ThreejsInterface {
         this.mouse = new THREE.Vector2();
 
         this.onSpatialInterfaceLoaded = this.onSpatialInterfaceLoaded.bind(this);
-        this.anchoredModelViewCallback = this.anchoredModelViewCallback.bind(this);
+        this.onCoordinateSystems = this.onCoordinateSystems.bind(this);
         this.touchDecider = this.touchDecider.bind(this);
         this.main = this.main.bind(this);
         this.render = this.render.bind(this);
@@ -347,7 +347,9 @@ class ThreejsInterface {
             this.spatialInterface.prefersAttachingToWorld();
         }
 
-        this.spatialInterface.addAnchoredModelViewListener(this.anchoredModelViewCallback);
+        this.spatialInterface.subscribeToCoordinateSystems([
+            spatialObject.COORDINATE_SYSTEMS.PROJECTION_MATRIX,
+        ], this.onCoordinateSystems);
 
         this.spatialInterface.setMoveDelay(300);
         this.spatialInterface.registerTouchDecider(this.touchDecider);
@@ -410,8 +412,11 @@ class ThreejsInterface {
         }
     }
 
-    anchoredModelViewCallback(modelViewMatrix, projectionMatrix) {
-        this.lastProjectionMatrix = projectionMatrix;
+    onCoordinateSystems(updatedSystems) {
+        if (updatedSystems[spatialObject.COORDINATE_SYSTEMS.PROJECTION_MATRIX]) {
+            this.lastProjectionMatrix = updatedSystems[spatialObject.COORDINATE_SYSTEMS.PROJECTION_MATRIX];
+            this.isProjectionMatrixSet = false;
+        }
     }
 
     getRealGl() {
