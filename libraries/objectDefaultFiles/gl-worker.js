@@ -1,3 +1,5 @@
+/* global spatialObject */
+
 const debugGlWorker = false;
 const GLPROXY_ENABLE_EXTVAO = true;
 
