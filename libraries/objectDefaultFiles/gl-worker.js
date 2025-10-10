@@ -436,11 +436,7 @@ class ThreejsInterface {
         }
         if (!this.isProjectionMatrixSet && this.lastProjectionMatrix && this.lastProjectionMatrix.length === 16) {
             this.setMatrixFromArray(this.camera.projectionMatrix, this.lastProjectionMatrix);
-            if (this.camera.projectionMatrixInverse.getInverse) {
-                this.camera.projectionMatrixInverse.getInverse(this.camera.projectionMatrix);
-            } else {
-                this.camera.projectionMatrixInverse.copy(this.camera.projectionMatrix).invert();
-            }
+            this.camera.projectionMatrixInverse.copy(this.camera.projectionMatrix).invert();
             this.isProjectionMatrixSet = true;
         }
 
