@@ -9,7 +9,7 @@ for i in `ls ./`; do
   echo $i
   cd $i
   npm ci --omit=dev
-  npm uninstall --omit=dev --no-save @ffmpeg-installer/ffmpeg fsevents node-opcua
+  npm uninstall --omit=dev --no-save fsevents node-opcua
   cd ..
 done
 
