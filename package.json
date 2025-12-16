@@ -20,7 +20,7 @@
     "module-alias": "^2.2.3",
     "monaco-editor": "^0.50.0",
     "network-interfaces": "^1.1.0",
-    "node-fetch": "^2.7.0",
+    "node-fetch": "^3.3.2",
     "node-persist": "^2.1.0",
     "simple-git": "^3.28.0",
     "toolsocket": "github:dataTimeSpace/toolsocket",
