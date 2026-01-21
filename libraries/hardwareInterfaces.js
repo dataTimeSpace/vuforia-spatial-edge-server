@@ -20,7 +20,7 @@
 const path = require('path');
 const fsProm = require('../persistence/fsProm.js');
 const utilities = require('./utilities');
-const {pathJoinRooted} = utilities;
+const {pathJoinRooted, parseCorruptedJson} = utilities;
 const Node = require('../models/Node.js');
 const Frame = require('../models/Frame.js');
 const ObjectModel = require('../models/ObjectModel.js');
@@ -846,7 +846,7 @@ async function setHardwareInterfaceSettings(interfaceName, settings, limitToKeys
         const rawSettings = await fsProm.readFile(interfaceSettingsPath, 'utf8') || '{}';
         let existingSettings = {};
         try {
-            existingSettings = JSON.parse(rawSettings);
+            existingSettings = parseCorruptedJson(rawSettings);
         } catch (e) {
             console.error('Unable to parse settings', e, rawSettings);
         }
@@ -905,7 +905,7 @@ async function setHardwareInterfaceEnabled(interfaceName, shouldBeEnabled, callb
 
     try {
         const rawSettings = await fsProm.readFile(interfaceSettingsPath, 'utf8') || '{}';
-        var settings = JSON.parse(rawSettings);
+        var settings = parseCorruptedJson(rawSettings);
         settings.enabled = shouldBeEnabled;
 
         if (globalVariables.saveToDisk) {
