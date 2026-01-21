@@ -193,7 +193,7 @@ async function getObjectIdFromObjectFile(folderName) {
 
     if (await fileExists(jsonFile)) {
         try {
-            let thisObject = JSON.parse(await fsProm.readFile(jsonFile, 'utf8'));
+            let thisObject = parseCorruptedJson(await fsProm.readFile(jsonFile, 'utf8'));
             if (thisObject.hasOwnProperty('objectId')) {
                 return thisObject.objectId;
             } else {
@@ -217,7 +217,7 @@ async function getAnchorIdFromObjectFile(folderName) {
 
     if (await fileExists(jsonFile)) {
         try {
-            let thisObject = JSON.parse(await fsProm.readFile(jsonFile, 'utf8'));
+            let thisObject = parseCorruptedJson(await fsProm.readFile(jsonFile, 'utf8'));
             if (thisObject.hasOwnProperty('objectId')) {
                 return thisObject.objectId;
             }
@@ -614,7 +614,7 @@ exports.updateObject = async function updateObject(objectName, objects) {
 
         // try to read a saved previous state of the object
         try {
-            objects[tempFolderName] = JSON.parse(await fsProm.readFile(pathJoinRooted(objectsPath, objectFolder, identityFolderName, 'object.json'), 'utf8'));
+            objects[tempFolderName] = parseCorruptedJson(await fsProm.readFile(pathJoinRooted(objectsPath, objectFolder, identityFolderName, 'object.json'), 'utf8'));
             objects[tempFolderName].ip = ip.address();
 
             // this is for transforming old lists to new lists
@@ -690,6 +690,23 @@ exports.deleteObject = async function deleteObject(objectName, objects, objectLo
     this.actionSender({reloadObject: {object: objectKey} });
 };
 
+/**
+ * Attempt to parse rawJson, recovering from common file corruptions
+ * that may occur to rawJson. Throws if error is unrecoverable.
+ * @param {string} rawJson
+ * @return {any}
+ */
+function parseCorruptedJson(rawJson) {
+    try {
+        return JSON.parse(rawJson);
+    } catch (_e) {
+        // Try again after stripping off the trailing two characters, hopefully `}\n`
+        // which would leave only a valid json file
+        return JSON.parse(rawJson.substring(0, rawJson.length - 2));
+    }
+}
+exports.parseCorruptedJson = parseCorruptedJson;
+
 exports.loadHardwareInterface = function loadHardwareInterface(hardwareInterfaceName) {
     const hardwareFolder = pathJoinRooted(hardwareIdentity, hardwareInterfaceName);
 
@@ -720,7 +737,7 @@ exports.loadHardwareInterface = function loadHardwareInterface(hardwareInterface
 
     try {
         var fileContents = fs.readFileSync(settingsPath, 'utf8');
-        hardwareInterfaces[hardwareInterfaceName] = JSON.parse(fileContents);
+        hardwareInterfaces[hardwareInterfaceName] = parseCorruptedJson(fileContents);
     } catch (e) {
         console.error('Could not load settings.json for: ' + hardwareInterfaceName, e);
         if (!hardwareInterfaces[hardwareInterfaceName]) {
@@ -757,7 +774,7 @@ exports.loadHardwareInterfaceAsync = async function loadHardwareInterfaceAsync(h
 
     try {
         const fileContents = await fsProm.readFile(settingsPath, 'utf8');
-        hardwareInterfaces[hardwareInterfaceName] = JSON.parse(fileContents);
+        hardwareInterfaces[hardwareInterfaceName] = parseCorruptedJson(fileContents);
     } catch (e) {
         console.error('Could not load settings.json for: ' + hardwareInterfaceName, e);
         if (!hardwareInterfaces[hardwareInterfaceName]) {
