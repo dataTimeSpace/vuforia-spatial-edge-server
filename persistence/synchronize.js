@@ -23,6 +23,7 @@ class Synchronizer {
         this.matching = [];
         this.enableSyncing = false;
         this.syncing = false;
+        this.syncFailed = false;
         this.onSyncDoneHooks = [];
     }
 
@@ -87,6 +88,7 @@ class Synchronizer {
         return {
             syncing: this.syncing,
             enableSyncing: this.enableSyncing,
+            syncFailed: this.syncFailed,
             worlds,
         };
     }
@@ -118,9 +120,7 @@ class Synchronizer {
                     this.syncing = false;
                     if (failuresAllowed-- < 0) {
                         console.error('Too many sync failures');
-                        this.onSyncDoneHooks = [];
-                        this.enableSyncing = false;
-                        return;
+                        throw e;
                     }
                 }
                 await this.updateSyncLists();
@@ -144,6 +144,9 @@ class Synchronizer {
             this.enableSyncing = false;
         } catch (error) {
             console.error('Unable to perform sync', error);
+            this.onSyncDoneHooks = [];
+            this.enableSyncing = false;
+            this.syncFailed = true;
         }
     }
 
@@ -170,6 +173,7 @@ class Synchronizer {
             return;
         }
         this.syncing = true;
+        this.syncFailed = false;
 
         if (DEBUG) {
             console.log('sync diffs', this.diffs);
