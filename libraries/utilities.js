@@ -700,9 +700,8 @@ function parseCorruptedJson(rawJson) {
     try {
         return JSON.parse(rawJson);
     } catch (_e) {
-        // Try again after stripping off the trailing two characters, hopefully `}\n`
-        // which would leave only a valid json file
-        return JSON.parse(rawJson.substring(0, rawJson.length - 2));
+        // Try again, replacing any trailing }} with }
+        return JSON.parse(rawJson.replace(/}}\s*$/, '}'));
     }
 }
 exports.parseCorruptedJson = parseCorruptedJson;
